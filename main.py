@@ -22,12 +22,17 @@ def arc_favs(update, ctx):
   print(graf)
 def arc_user(update, ctx):
   text = update.message.text
-  ctx.bot.send_message(chat_id=update.effective_chat.id, text="Ao!", parse_mode=telegram.ParseMode.MARKDOWN) 
+  text = cutcmd(text)
+  graf = graph.fetchUser(text)
+  ctx.bot.send_message(chat_id=update.effective_chat.id, text="*"+text+"*\n" + graf["url"], parse_mode=telegram.ParseMode.MARKDOWN) 
+  print(graf)
 from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start)
 favs_handler = CommandHandler('favs', arc_favs)
+user_handler = CommandHandler('user', arc_user)
 message_handler = MessageHandler(Filters.all, arc_user)
 dispatcher.add_handler(start_handler)
 #dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
+dispatcher.add_handler(user_handler)
 updater.start_polling()

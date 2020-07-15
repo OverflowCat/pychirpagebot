@@ -14,10 +14,6 @@ auth.set_access_token(T3, T4)
 api = tweepy.API(auth)
 
 
-
-
-
-
 def fetchFavs(user):
   if user == "ofc":
     user = "u7x09"
@@ -38,8 +34,17 @@ def fetchFavs(user):
         replurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.in_reply_to_status_id_str
         repl = '<p><strong>↬</strong> # <a href="' + replurl + '">' + t.in_reply_to_status_id_str + "</a>"
       else:
-        replurl = "https://twitter.com/" + t.in_reply_to_screen_name + "/status/" + t.in_reply_to_status_id_str
-        repl = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name + '</code> · _<code>' + t.in_reply_to_user_id_str + '</code> : # <a href="' + replurl + '">' + t.in_reply_to_status_id_str + '</a>'
+        replurl = "https://twitter.com/" + t.in_reply_to_screen_name
+        in_reply_to_status_id_str_attr = getattr(t, 'in_reply_to_status_id_str') #被屏蔽这里就是 NoneType
+        if in_reply_to_status_id_str_attr is not None:
+          replurl = replurl + "/status/" + t.in_reply_to_status_id_str
+          _in_reply_to_status_id_str =  t.in_reply_to_status_id_str #the text
+        else:
+          _in_reply_to_status_id_str = '@' + t.in_reply_to_screen_name #the text
+        repl = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name 
+        repl += '</code> · _<code>' + t.in_reply_to_user_id_str
+        repl += '</code> : # <a href="' + replurl + '">'
+        repl += _in_reply_to_status_id_str + '</a>'
       print(repl)
       htm.append(repl)
     htm.append("<p>" + t.text + "</p>")
@@ -51,9 +56,6 @@ def fetchFavs(user):
     output.append(" ".join(htm))
   graf = graph.post(title=user, author='Twitter', text="\n".join(output))
   return graf
-
-
-
 
 
 def fetchUser(user="realDonaldTrump"):
