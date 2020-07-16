@@ -1,14 +1,15 @@
 import json
 import re
+import os
 import tweepy
 from datetime import datetime
 from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
 graph = TelegraphPoster(access_token='556b039106f6877d599578530b74768a2959e488c4419355944819d369af')
-T1 = 'VwvCRQnzMY26nGQFVhTTZxAqM'
-T2 = '2Q98qYh9lUL7FPqi0VNZo9ZrmdlZhQdkYvBrUHqIzvrwiPaneL'
-T3 = '758295043337617408-OkKZJAu36S6yXb7iCwA3tfO1y60zfo1'
-T4 = '4iJf8fMiIF9LkOlMpxbTa2zwrGxxH2CTQs3OW6Q7LwwBy'
+T1 = os.environ["T1"]
+T2 = os.environ["T2"]
+T3 = os.environ["T3"]
+T4 = os.environ["T4"]
 auth = tweepy.OAuthHandler(T1, T2)
 auth.set_access_token(T3, T4)
 api = tweepy.API(auth)

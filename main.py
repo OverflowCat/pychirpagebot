@@ -1,14 +1,13 @@
 import telegram
 import graph
 import re
+import os
 cmdre = re.compile(r'\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 def cutcmd(msg_txt):
   return re.sub(cmdre, "", msg_txt)
-with open("token.txt") as f:
-  _token = f.readlines()[0]
-bot = telegram.Bot(token=_token)
+bot = telegram.Bot(token=os.environ["chirpage"])
 from telegram.ext import Updater
-updater = Updater(token=_token, use_context=True)
+updater = Updater(os.environ["chirpage"], use_context=True)
 dispatcher = updater.dispatcher
 import logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
