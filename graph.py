@@ -43,7 +43,7 @@ def fetchUser(user, title=""):
     user = "u7x09"
   if title == "":
     title = user
-  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
+  tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
@@ -76,7 +76,6 @@ def old_fetchFavs(user):
         repl += '</code> · _<code>' + t.in_reply_to_user_id_str
         repl += '</code> : # <a href="' + replurl + '">'
         repl += _in_reply_to_status_id_str + '</a>'
-      print(repl)
       htm.append(repl)
     htm.append("<p>" + t.text + "</p>")
     if 'media' in t.entities:
@@ -118,19 +117,24 @@ def old_fetchUser(user="realDonaldTrump"):
         repl += '</code> · _<code>' + t.in_reply_to_user_id_str
         repl += '</code> : # <a href="' + replurl + '">'
         repl += _in_reply_to_status_id_str + '</a>'
-      print(repl)
       htm.append(repl)
     htm.append("<p>" + t.full_text + "</p>") # full!!!!!
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append(" ".join(htm))
-    print(" ".join(htm))
+
   graf = graph.post(title=user, author='Twitter', text="\n".join(output))
   return graf
 
 def dealWithTweets(tweets, **pa):
   output = []
+  timer = 0
+  bioInfo = ["", ""]
   for t in tweets:
+    timer += 1
+    if timer == 1:
+      if not pa["username"]: # 使用了 /user 故不需要每条推都显示作者用户名，因为都是一样的
+        bioInfo.append(userBio(t.user))
     htm = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
     htm.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")
@@ -154,7 +158,6 @@ def dealWithTweets(tweets, **pa):
         repl += '</code> · _<code>' + t.in_reply_to_user_id_str
         repl += '</code> : # <a href="' + replurl + '">'
         repl += _in_reply_to_status_id_str + '</a>'
-      print(repl)
       htm.append(repl)
     htm.append("<p>" + t.full_text + "</p>") # full!!!!!
 
@@ -170,4 +173,23 @@ def dealWithTweets(tweets, **pa):
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append(" ".join(htm))
-  return "".join(output)
+  ooo = "".join(output)
+  ooo = "".join(bioInfo) + ooo
+  print(ooo)
+  return ooo
+
+def userBio(userobj):
+  ooo = []
+  u = userobj
+  htm = []
+  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code> ID: <code>_" + u.id_str + "</code")
+  if hasattr(u, "profile_banner_url"):
+    htm.append('<img src="' + u.profile_banner_url + ">")
+  htm.append("<aside>" + u.description + "</aside>")
+  if not u.default_profile_image:
+    # htm.append('<img src="' + u.profile_image_url_https.replace('_normal', "_original") + '">')
+    htm.append('<img src="' + u.profile_image_url_https + '">')
+  ooo.append("".join(htm))
+  ooo = "".join(ooo)
+  print(ooo)
+  return ooo
