@@ -6,7 +6,8 @@ import requests
 from datetime import datetime
 from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
-graph = TelegraphPoster(access_token='556b039106f6877d599578530b74768a2959e488c4419355944819d369af')
+graphacc = os.environ["G1"]
+graph = TelegraphPoster(access_token=graphacc)
 T1 = os.environ["T1"]
 T2 = os.environ["T2"]
 T3 = os.environ["T3"]
@@ -27,7 +28,27 @@ def save_imgs(imgurls):
       graphPicUrls.append(upload_image(filename))
   return graphPicUrls
 
-def fetchFavs(user):
+def fetchFavs(user, title=""):
+  if user == "ofc":
+    user = "u7x09"
+  if title == "":
+    title = user + "-fav"
+  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
+  ooo = dealWithTweets(tweets, username=True)
+  graf = graph.post(title=user, author='Twitter', text="".join(ooo))
+  return graf
+
+def fetchUser(user, title=""):
+  if user == "ofc":
+    user = "u7x09"
+  if title == "":
+    title = user
+  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
+  ooo = dealWithTweets(tweets, username=False)
+  graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
+  return graf
+
+def old_fetchFavs(user):
   if user == "ofc":
     user = "u7x09"
   tweets = tweepy.Cursor(api.favorites, screen_name=user).items(60)
@@ -72,8 +93,7 @@ def fetchFavs(user):
   graf = graph.post(title=user, author='Twitter', text="".join(output))
   return graf
 
-
-def fetchUser(user="realDonaldTrump"):
+def old_fetchUser(user="realDonaldTrump"):
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(80)
   output = []
   for t in tweets:
@@ -108,13 +128,13 @@ def fetchUser(user="realDonaldTrump"):
   graf = graph.post(title=user, author='Twitter', text="\n".join(output))
   return graf
 
-
 def dealWithTweets(tweets, **pa):
+  output = []
   for t in tweets:
     htm = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
     htm.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")
-    if pa.username:
+    if pa['username']:
       htm.append("<p><b>" + t.user.name + "</b> (<code>@" + t.user.screen_name + "</code> · _<code>" + t.user.id_str + "</code>)</p>")
     # 判断是否是 reply
     replyattr = getattr(t, 'in_reply_to_screen_name', None)
@@ -137,9 +157,17 @@ def dealWithTweets(tweets, **pa):
       print(repl)
       htm.append(repl)
     htm.append("<p>" + t.full_text + "</p>") # full!!!!!
+
+    # Image(s)
+    if 'media' in t.entities:
+      imgurls = []	
+      for media in t.extended_entities['media']:	
+        imgurls.append(" " + media['media_url'])	
+      graphimgurls = save_imgs(imgurls)	
+      graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]	
+      htm.append("".join(graphimgshtml))
+
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append(" ".join(htm))
-    print(" ".join(htm))
-  graf = graph.post(title=user, author='Twitter', text="\n".join(output))
-  return graf
+  return "".join(output)
