@@ -3,6 +3,10 @@ import re
 import os
 import tweepy
 import requests
+import string
+import random
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+  return ''.join(random.choice(chars) for _ in range(size))
 from datetime import datetime
 from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
@@ -45,7 +49,7 @@ def fetchUser(user, title=""):
     title = user
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
-  graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
+  graf = graph.post(title=id_generator(3)+"-twitter-user-"+title+"-"+id_generator(3), author='Twitter', text=" "+"".join(ooo))
   return graf
 
 def old_fetchFavs(user):
