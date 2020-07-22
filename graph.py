@@ -32,11 +32,15 @@ def save_imgs(imgurls):
       graphPicUrls.append(upload_image(filename))
   return graphPicUrls
 
+def save_img(imgurl):
+  return save_imgs([imgurl])[0]
+
 def fetchFavs(user, title=""):
   if user == "ofc":
     user = "u7x09"
   if title == "":
     title = user + "-fav"
+  print("Fetch @" + user + "'s favorites")
   tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title=user, author='Twitter', text="".join(ooo))
@@ -47,6 +51,7 @@ def fetchUser(user, title=""):
     user = "u7x09"
   if title == "":
     title = user
+  print("Fetch @" + user)
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
   graf = graph.post(title=id_generator(3)+"-twitter-user-"+title+"-"+id_generator(3), author='Twitter', text=" "+"".join(ooo))
@@ -186,13 +191,21 @@ def userBio(userobj):
   ooo = []
   u = userobj
   htm = []
-  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code> ID: <code>_" + u.id_str + "</code")
+  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><br>ID: <code>_" + u.id_str + "</code")
+  if u.protected:
+    htm.append(" 🔓")
+  if u.verified:
+    htm.append(" ✔️")
   if hasattr(u, "profile_banner_url"):
-    htm.append('<img src="' + u.profile_banner_url + ">")
+    htm.append('<img src="' + save_img(u.profile_banner_url) + ">")
   htm.append("<aside>" + u.description + "</aside>")
+  if hasattr(u, "url"):
+    url = u.url
+    htm.append('🔗 <a href="' + url + '">' + url + '</a>')
   if not u.default_profile_image:
-    # htm.append('<img src="' + u.profile_image_url_https.replace('_normal', "_original") + '">')
-    htm.append('<img src="' + u.profile_image_url_https + '">')
+    print("Avatar: " + u.profile_image_url_https)
+    htm.append('<img src="' + save_img(u.profile_image_url_https.replace('_normal', "_original")) + '">')
+    # htm.append('<img src="' + u.profile_image_url_https + '">')
   ooo.append("".join(htm))
   ooo = "".join(ooo)
   print(ooo)
