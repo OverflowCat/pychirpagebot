@@ -33,7 +33,11 @@ def save_imgs(imgurls):
   return graphPicUrls
 
 def save_img(imgurl):
-  return save_imgs([imgurl])[0]
+  res = save_imgs([imgurl])
+  if len(res) == 1:
+    return res[0]
+  else:
+    return "err"
 
 def fetchFavs(user, title=""):
   if user == "ofc":
@@ -191,21 +195,29 @@ def userBio(userobj):
   ooo = []
   u = userobj
   htm = []
-  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><br>ID: <code>_" + u.id_str + "</code")
+  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><br>ID: <code>_" + u.id_str + "</code>")
   if u.protected:
     htm.append(" 🔓")
   if u.verified:
     htm.append(" ✔️")
+
   if hasattr(u, "profile_banner_url"):
-    htm.append('<img src="' + save_img(u.profile_banner_url) + ">")
+    print("Banner URL: " + u.profile_banner_url)
+    saved = save_img(u.profile_banner_url)
+    if saved != "err":
+      htm.append('<img src="' + saved + ">")
+
   htm.append("<aside>" + u.description + "</aside>")
   if hasattr(u, "url"):
+    print("has attr! ")
+    print(u.url)
     url = u.url
     htm.append('🔗 <a href="' + url + '">' + url + '</a>')
   if not u.default_profile_image:
     print("Avatar: " + u.profile_image_url_https)
-    htm.append('<img src="' + save_img(u.profile_image_url_https.replace('_normal', "_original")) + '">')
-    # htm.append('<img src="' + u.profile_image_url_https + '">')
+    htm.append('<img src="' + u.profile_image_url_https + '">')
+    # saved = save_img(u.profile_image_url_https.replace('_normal', "_original"))
+    # htm.append('<img src="' + saved + '">')
   ooo.append("".join(htm))
   ooo = "".join(ooo)
   print(ooo)

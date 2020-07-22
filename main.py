@@ -2,6 +2,7 @@ import telegram
 import graph
 import re
 import os
+print("App started")
 cmdre = re.compile(r'\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 def cutcmd(msg_txt):
   return re.sub(cmdre, "", msg_txt)
