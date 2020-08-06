@@ -43,11 +43,11 @@ def fetchFavs(user, title=""):
   if user == "ofc":
     user = "u7x09"
   if title == "":
-    title = user + "-fav"
-  print("Fetch @" + user + "'s favorites")
-  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
+    title = "F" + id_generator(3)
+  print("Fetching @" + user + "'s favorites")
+  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(63)
   ooo = dealWithTweets(tweets, username=True)
-  graf = graph.post(title=user, author='Twitter', text="".join(ooo))
+  graf = graph.post(title=title, author='Twitter', text="".join(ooo))
   return graf
 
 def fetchUser(user, title=""):
@@ -55,10 +55,10 @@ def fetchUser(user, title=""):
     user = "u7x09"
   if title == "":
     title = user
-  print("Fetch @" + user)
+  print("Fetching @" + user)
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
-  graf = graph.post(title=id_generator(3)+"-twitter-user-"+title+"-"+id_generator(3), author='Twitter', text=" "+"".join(ooo))
+  graf = graph.post(title="Twitter User @"+title+" Tweets Archive", author='Twitter', text=" "+"".join(ooo))
   return graf
 
 def old_fetchFavs(user):
@@ -141,13 +141,14 @@ def old_fetchUser(user="realDonaldTrump"):
 
 def dealWithTweets(tweets, **pa):
   output = []
-  timer = 0
+  counter = 0
   bioInfo = ["", ""]
   for t in tweets:
-    timer += 1
-    if timer == 1:
+    counter += 1
+    if counter == 1:
       if not pa["username"]: # 使用了 /user 故不需要每条推都显示作者用户名，因为都是一样的
         bioInfo.append(userBio(t.user))
+    
     htm = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
     htm.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")
@@ -185,11 +186,25 @@ def dealWithTweets(tweets, **pa):
 
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
-    output.append(" ".join(htm))
+    output.append("".join(htm))
   ooo = "".join(output)
   ooo = "".join(bioInfo) + ooo
   print(ooo)
+  ooo = ooo.replace('\n', '<br>')
   return ooo
+
+def pagesTweets(tweets, **pa):
+  counter = 0
+  outputTweets = []
+  graves = []
+  for t in tweets:
+    counter += 1
+    if counter%60 == 0:
+      # New page!
+      graves.append(dealWithTweets(outputTweets, pa))
+    else:
+      outputTweets.append(t)
+  return graves
 
 def userBio(userobj):
   ooo = []
@@ -208,7 +223,7 @@ def userBio(userobj):
       htm.append('<img src="' + saved + ">")
 
   htm.append("<aside>" + u.description + "</aside>")
-  if hasattr(u, "url"):
+  if False:#hasattr(u, "url"):
     print("has attr! ")
     print(u.url)
     url = u.url
