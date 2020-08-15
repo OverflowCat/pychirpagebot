@@ -7,6 +7,22 @@ from datetime import datetime
 print("App started")
 from dotenv import load_dotenv
 load_dotenv()
+
+import requests
+def log(_path, _user, _type, _query):
+    r = requests.post(
+        os.environ["DB"],
+        json={
+            "data": {
+                "path": _path,
+                "user": _user,
+                "type": _type,
+                "query": _query,
+                "time": int(datetime.utcnow().timestamp())
+            }
+        })
+    return r.json()
+
 cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 
 
@@ -38,6 +54,7 @@ def arc_favs(update, ctx):
     text = update.message.text
     text = cutcmd(text)
     graf = graph.fetchFavs(text)
+    log(graf, text, 'favs', text + ':favs')
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="*" + text + "*\n" + graf["url"],
@@ -50,6 +67,7 @@ def arc_user(update, ctx):
     text = update.message.text
     text = cutcmd(text)
     graf = graph.fetchUser(text)
+    log(graf, text, 'user', text + ':timeline')
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="*" + text + "*\n" + graf["url"],
@@ -62,6 +80,7 @@ def dutymachine(update, ctx):
     text = update.message.text
     text = cutcmd(text)
     resp = duty.dm(text)
+    log('', text, 'duty', resp)
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="`" + text + "`\n" + resp,
@@ -79,6 +98,7 @@ def userduty(update, ctx):
     text = cutcmd(text)
     graf = graph.fetchUser(text)
     resp = duty.dm(graf)
+    log(graf, text, 'userduty', resp)
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="`" + text + "`\n" + resp,
@@ -102,20 +122,3 @@ dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(userduty_handler)
 # 拉清单
 updater.start_polling()
-
-import requests
-
-
-def log(_path, _user, _type, _query):
-    r = requests.post(
-        os.environ["DB"],
-        json={
-            "data": {
-                "path": _path,
-                "user": _user,
-                "type": _type,
-                "query": _query,
-                "time": int(datetime.utcnow().timestamp())
-            }
-        })
-    return r.json()
