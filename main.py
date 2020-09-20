@@ -114,8 +114,12 @@ def followings(update, ctx):
   api = graph.getApi()
   try:
     for user in tweepy.Cursor(api.friends, screen_name="2Lmwx", count=4999).items():
-    print(user.screen_name)
-    fllwings.append(user.screen_name)
+      print(user.screen_name)
+      fllwings.append(user.screen_name)
+  except:
+    pass
+  else:
+    pass
   global myfllwings
   myfllwings = fllwings
   resu = graph.p(" ".join(myfllwings), "My Followings")
