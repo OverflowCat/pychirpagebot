@@ -19,11 +19,26 @@ T4 = os.environ["T4"]
 auth = tweepy.OAuthHandler(T1, T2)
 auth.set_access_token(T3, T4)
 api = tweepy.API(auth)
+temp_dir = 'temp'
+if not os.path.exists(temp_dir):
+    os.makedirs(temp_dir)
 
+def getTweepy():
+  return tweepy
+
+def getApi():
+  return api
+  
 def save_imgs(imgurls):
+  print("Saving " + ", ".join(imgurls))
   graphPicUrls = []
   for pic in imgurls:
-    filename = 'temp/temp_' + id_generator(5) + '.jpg'
+    find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", pic)
+    filename = 'temp_' + id_generator(5) + '.jpg'
+    if find_hash != []:
+      print(find_hash)
+      filename = find_hash[0].replace(r'/', "")
+    filename = temp_dir + "/" + filename
     request = requests.get(pic.replace("http://", "https://")+"?format=jpg&name=orig", stream=True)
     if request.status_code == 200:
       with open(filename, 'wb') as image:
@@ -43,7 +58,7 @@ def save_img(imgurl):
 tco_rgx = re.compile(r"(https:\/\/t\.co)/([a-zA-Z0-9]{10})")
 def tco(texto):
   return re.sub(tco_rgx,
-  r'<a href="\1/\2">\2</a>')
+  r'<a href="\1/\2">\2</a>', texto)
 
 def get_user_link(user, html=False, id_str=False):
   link = r"https://twitter.com/" + user.screen_name
@@ -190,14 +205,14 @@ def dealWithTweets(tweets, **pa):
         repl += _in_reply_to_status_id_str + '</a>'
       htm.append(repl)
       
-      #deal with text
-      status_text  = t.full_text #extended_mode
-      if status_text.startswith("RT @") & status_text.endswith("…"):
-        # This may be a retweet with over 140 chars
-        if hasattr(t, 'retweeted_status'):
-          rt = t.retweeted_status
-          status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.full_text
-    htm.append("<p>" + status_text + "</p>")
+    #deal with text
+    status_text  = t.full_text #extended_mode
+    if status_text.startswith("RT @") & status_text.endswith("…"):
+      # This may be a retweet with over 140 chars
+      if hasattr(t, 'retweeted_status'):
+        rt = t.retweeted_status
+        status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.full_text
+    htm.append("<p>" + tco(status_text) + r"</p>")
 
     # Image(s)
     if 'media' in t.entities:
@@ -234,9 +249,9 @@ def userBio(userobj):
   ooo = []
   u = userobj
   htm = []
-  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><br>ID: <code>_" + u.id_str + "</code>")
+  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><p>ID: <code>_" + u.id_str + "</code></p>")
   if u.protected:
-    htm.append(" 🔓")
+    htm.append(" 🔒")
   if u.verified:
     htm.append(" ✔️")
 
@@ -262,7 +277,12 @@ def userBio(userobj):
     htm.append('<img src="' + profilepic + '">')
     # saved = save_img(u.profile_image_url_https.replace('_normal', "_original"))
     # htm.append('<img src="' + saved + '">')
+  htm.append(f'✏️ {str(u.statuses_count)}丨👥 {str(u.followers_count)}丨👁️ {str(u.friends_count)}丨♥️ {str(u.favourites_count)}<br>📆 {u.created_at}<hr>')
   ooo.append("".join(htm))
   ooo = "".join(ooo)
   print(ooo)
   return ooo
+  
+  def p(text, title="Logs"):
+    graf = graph.post(title=title, author='Chirpage', text=text)
+  return graf
