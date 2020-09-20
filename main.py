@@ -11,7 +11,7 @@ load_dotenv()
 import requests
 def log(_path, _user, _type, _query):
     r = requests.post(
-        os.environ["DB"],
+        os.environ["CHSHDB"],
         json={
             "data": {
                 "path": _path,
@@ -80,7 +80,7 @@ def dutymachine(update, ctx):
     text = update.message.text
     text = cutcmd(text)
     resp = duty.dm(text)
-    log('', text, 'duty', resp)
+    log('DUTY', text, 'duty', resp)
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="`" + text + "`\n" + resp,

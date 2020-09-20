@@ -23,13 +23,14 @@ api = tweepy.API(auth)
 def save_imgs(imgurls):
   graphPicUrls = []
   for pic in imgurls:
-    filename = 'temp.jpg'
+    filename = 'temp/temp_' + id_generator(5) + '.jpg'
     request = requests.get(pic.replace("http://", "https://")+"?format=jpg&name=orig", stream=True)
     if request.status_code == 200:
       with open(filename, 'wb') as image:
         for chunk in request:
           image.write(chunk)
       graphPicUrls.append(upload_image(filename))
+      #os.remove(filename)
   return graphPicUrls
 
 def save_img(imgurl):
@@ -39,11 +40,25 @@ def save_img(imgurl):
   else:
     return "err"
 
-def fetchFavs(user, title=""):
-  if user == "ofc":
-    user = "u7x09"
+tco_rgx = re.compile(r"(https:\/\/t\.co)/([a-zA-Z0-9]{10})")
+def tco(texto):
+  return re.sub(tco_rgx,
+  r'<a href="\1/\2">\2</a>')
+
+def get_user_link(user, html=False, id_str=False):
+  link = r"https://twitter.com/" + user.screen_name
+  if html:
+    user_html = f'<a hr ef="{link}">@{user.screen_name}</a>'
+    if id_str:
+      return user_html + ' <code>_' + user.id_str + r"</code>"
+    return user_html
+  return link
+
+def fetchFavs(user, title=''):
+  if user == "i":
+    user = "2Lmwx"
   if title == "":
-    title = "F" + id_generator(3)
+    title = user + "-favs-" + id_generator(3)
   print("Fetching @" + user + "'s favorites")
   tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(63)
   ooo = dealWithTweets(tweets, username=True)
@@ -52,18 +67,19 @@ def fetchFavs(user, title=""):
 
 def fetchUser(user, title=""):
   if user == "ofc":
-    user = "u7x09"
+    user = "2Lmwx"
+  title = user
   if title == "":
     title = user
   print("Fetching @" + user)
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
-  graf = graph.post(title="Twitter User @"+title+" Tweets Archive", author='Twitter', text=" "+"".join(ooo))
+  graf = graph.post(title="@"+title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
 def old_fetchFavs(user):
   if user == "ofc":
-    user = "u7x09"
+    user = "2Lmwx"
   tweets = tweepy.Cursor(api.favorites, screen_name=user).items(60)
   output = []
   for t in tweets:
@@ -173,7 +189,15 @@ def dealWithTweets(tweets, **pa):
         repl += '</code> : # <a href="' + replurl + '">'
         repl += _in_reply_to_status_id_str + '</a>'
       htm.append(repl)
-    htm.append("<p>" + t.full_text + "</p>") # full!!!!!
+      
+      #deal with text
+      status_text  = t.full_text #extended_mode
+      if status_text.startswith("RT @") & status_text.endswith("…"):
+        # This may be a retweet with over 140 chars
+        if hasattr(t, 'retweeted_status'):
+          rt = t.retweeted_status
+          status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.full_text
+    htm.append("<p>" + status_text + "</p>")
 
     # Image(s)
     if 'media' in t.entities:
@@ -221,6 +245,8 @@ def userBio(userobj):
     saved = save_img(u.profile_banner_url)
     if saved != "err":
       htm.append('<img src="' + saved + ">")
+    else:
+      print("Saving Banner ERR")
 
   htm.append("<aside>" + u.description + "</aside>")
   if False:#hasattr(u, "url"):
@@ -229,8 +255,11 @@ def userBio(userobj):
     url = u.url
     htm.append('🔗 <a href="' + url + '">' + url + '</a>')
   if not u.default_profile_image:
-    print("Avatar: " + u.profile_image_url_https)
-    htm.append('<img src="' + u.profile_image_url_https + '">')
+    profilepic = u.profile_image_url_https.replace("_normal", "") # original
+    # other sizes:
+    # https://stackoverflow.com/questions/34761622/how-to-get-users-high-resolution-profile-picture-on-twitter
+    print("Avatar: " + profilepic)
+    htm.append('<img src="' + profilepic + '">')
     # saved = save_img(u.profile_image_url_https.replace('_normal', "_original"))
     # htm.append('<img src="' + saved + '">')
   ooo.append("".join(htm))
