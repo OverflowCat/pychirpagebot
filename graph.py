@@ -5,6 +5,7 @@ import tweepy
 import requests
 import string
 import random
+import pagination
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
 from datetime import datetime
@@ -69,6 +70,9 @@ def get_user_link(user, html=False, id_str=False):
     return user_html
   return link
 
+# collect
+user_collect=[]
+
 def fetchFavs(user, title=''):
   if user == "i":
     user = "2Lmwx"
@@ -83,7 +87,6 @@ def fetchFavs(user, title=''):
 def fetchUser(user, title=""):
   if user == "ofc":
     user = "2Lmwx"
-  title = user
   if title == "":
     title = user
   print("Fetching @" + user)
@@ -179,7 +182,9 @@ def dealWithTweets(tweets, **pa):
     if counter == 1:
       if not pa["username"]: # 使用了 /user 故不需要每条推都显示作者用户名，因为都是一样的
         bioInfo.append(userBio(t.user))
-    
+      else:
+        # 不是用户 bio 页，故需要收集用户
+        user_collect.append(t.user.screen_name)
     htm = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
     htm.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")

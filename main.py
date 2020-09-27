@@ -67,7 +67,11 @@ def arc_favs(update, ctx):
 def arc_user(update, ctx):
     text = update.message.text
     text = cutcmd(text)
-    graf = graph.fetchUser(text)
+    splited = text.split(" as ")
+    title = ""
+    if splited != []:
+      title = splited[1]
+    graf = graph.fetchUser(text, title=title)
     log(graf, text, 'user', text + ':timeline')
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
