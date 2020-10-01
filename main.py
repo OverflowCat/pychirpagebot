@@ -3,6 +3,7 @@ import graph
 import re
 import os
 import duty
+import reg
 from datetime import datetime
 print("App started")
 from dotenv import load_dotenv
@@ -65,20 +66,23 @@ def arc_favs(update, ctx):
 
 @run_async
 def arc_user(update, ctx):
-    text = update.message.text
-    text = cutcmd(text)
-    splited = text.split(" as ")
-    title = ""
-    if splited != []:
-      title = splited[1]
-    graf = graph.fetchUser(text, title=title)
-    log(graf, text, 'user', text + ':timeline')
-    ctx.bot.send_message(
+  text = update.message.text
+  text = cutcmd(text)
+  splited = text.split(" as ")
+  title = ""
+  if splited != []:
+    title = splited[1]
+  graf = graph.fetchUser(text, title=title)
+  log(graf, text, 'user', text + ':timeline')
+  ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
-    print(graf)
+  print(graf)
 
+@run_async
+def favs_users(update, ctx):
+  pass
 
 @run_async
 def dutymachine(update, ctx):
@@ -130,7 +134,24 @@ def followings(update, ctx):
   print(resu)
   ctx.bot.send_message(chat_id=update.effective_chat.id,
         text=resu["url"])
-  
+
+@run_async
+def plain_msg(update, ctx):
+  print('msg')
+  text = update.message.text
+  if reg.is_status(text):
+    regf = re.findall(r'com\/@?[a-zA-Z0-9_]+\/status', text)[0]
+    spl = regf.split(r'/')
+    user = spl[1]
+    print('User in link: ' + user)
+    graf = graph.fetchUser(user, title=user)
+    log(graf, user, 'user', text + ':timeline')
+    ctx.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="*" + "Get user from link: " + user + "*\n" + graf["url"],
+        parse_mode=telegram.ParseMode.MARKDOWN)
+    print(graf)
+
 from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start)
 favs_handler = CommandHandler('favs', arc_favs)
@@ -139,9 +160,9 @@ duty_handler = CommandHandler('duty', dutymachine)
 userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
-message_handler = MessageHandler(Filters.all, arc_user)
+message_handler = MessageHandler(Filters.all, plain_msg)
 dispatcher.add_handler(start_handler)
-# dispatcher.add_handler(message_handler)
+dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
 dispatcher.add_handler(duty_handler)

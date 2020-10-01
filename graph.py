@@ -29,25 +29,30 @@ def getTweepy():
 
 def getApi():
   return api
-  
+
 def save_imgs(imgurls):
   print("Saving " + ", ".join(imgurls))
   graphPicUrls = []
   for pic in imgurls:
     find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", pic)
     filename = 'temp_' + id_generator(5) + '.jpg'
+    if pic.endswith('.png'):
+      filename = pic.split(r"/")[-1]
     if find_hash != []:
       print(find_hash)
       filename = find_hash[0].replace(r'/', "")
     filename = temp_dir + "/" + filename
-    request = requests.get(pic.replace("http://", "https://")+"?format=jpg&name=orig", stream=True)
+    #if True: # not os.path.exists(filename):
+    request = requests.get(pic.replace(r"http://", r"https://"), stream=True)
+   # +"?format=jpg&name=orig"
     if request.status_code == 200:
       with open(filename, 'wb') as image:
         for chunk in request:
           image.write(chunk)
-      graphPicUrls.append(upload_image(filename))
-      #os.remove(filename)
-  return graphPicUrls
+    graphPicUrls.append(upload_image(filename))
+    #os.remove(filename)
+    return graphPicUrls
+     # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
 
 def save_img(imgurl):
   res = save_imgs([imgurl])
@@ -88,11 +93,11 @@ def fetchUser(user, title=""):
   if user == "ofc":
     user = "2Lmwx"
   if title == "":
-    title = user
+    title = "@" + user
   print("Fetching @" + user)
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
-  graf = graph.post(title="@"+title, author='Twitter', text=" "+"".join(ooo))
+  graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
 def old_fetchFavs(user):
@@ -260,7 +265,7 @@ def userBio(userobj):
   if u.verified:
     htm.append(" ✔️")
 
-  if hasattr(u, "profile_banner_url"):
+  if False: # hasattr(u, "profile_banner_url"):
     print("Banner URL: " + u.profile_banner_url)
     saved = save_img(u.profile_banner_url)
     if saved != "err":
