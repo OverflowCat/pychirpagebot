@@ -51,8 +51,8 @@ def save_imgs(imgurls):
           image.write(chunk)
     graphPicUrls.append(upload_image(filename))
     #os.remove(filename)
-    return graphPicUrls
-     # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
+  return graphPicUrls
+  # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
 
 def save_img(imgurl):
   res = save_imgs([imgurl])
