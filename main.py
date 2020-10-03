@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv() # graph.py requires env
+
 import telegram
 import graph
 import re
@@ -6,8 +9,6 @@ import duty
 import reg
 from datetime import datetime
 print("App started")
-from dotenv import load_dotenv
-load_dotenv()
 
 import requests
 def log(_path, _user, _type, _query):
@@ -70,7 +71,7 @@ def arc_user(update, ctx):
   text = cutcmd(text)
   splited = text.split(" as ")
   title = ""
-  if splited != []:
+  if splited != [text]:
     title = splited[1]
   graf = graph.fetchUser(text, title=title)
   log(graf, text, 'user', text + ':timeline')
@@ -160,7 +161,7 @@ duty_handler = CommandHandler('duty', dutymachine)
 userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
-message_handler = MessageHandler(Filters.all, plain_msg)
+message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
