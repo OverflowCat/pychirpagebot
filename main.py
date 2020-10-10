@@ -31,7 +31,7 @@ cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 def cutcmd(msg_txt):
   seps = msg_txt.split(" ")
   seps.pop(0)
-  return ' '.join(seps)(())
+  return ' '.join(seps)
     #return re.sub(cmdre, "", msg_txt)
 
 myfllwings = []
