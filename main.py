@@ -29,7 +29,10 @@ cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 
 
 def cutcmd(msg_txt):
-    return re.sub(cmdre, "", msg_txt)
+  seps = msg_txt.split(" ")
+  seps.pop(0)
+  return ' '.join(seps)(())
+    #return re.sub(cmdre, "", msg_txt)
 
 myfllwings = []
 
@@ -80,6 +83,17 @@ def arc_user(update, ctx):
         text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
   print(graf)
+
+@run_async
+def search_tweets(update, ctx):
+  text = update.message.text
+  text = cutcmd(text)
+  graf = graph.search(text, title=text)
+  log(graf, text, 'search', text + ':search')
+  ctx.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="*" + text + "*\n" + graf["url"],
+        parse_mode=telegram.ParseMode.MARKDOWN)
 
 @run_async
 def favs_users(update, ctx):
@@ -157,6 +171,7 @@ from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start)
 favs_handler = CommandHandler('favs', arc_favs)
 user_handler = CommandHandler('user', arc_user)
+search_handler = CommandHandler('search', search_tweets)
 duty_handler = CommandHandler('duty', dutymachine)
 userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
@@ -166,6 +181,7 @@ dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
+dispatcher.add_handler(search_handler)
 dispatcher.add_handler(duty_handler)
 dispatcher.add_handler(followings_handler)
 dispatcher.add_handler(ping_handler)
