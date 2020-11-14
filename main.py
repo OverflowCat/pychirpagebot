@@ -7,6 +7,8 @@ import re
 import os
 import duty
 import reg
+import db
+
 from datetime import datetime
 print("App started")
 
@@ -94,6 +96,12 @@ def search_tweets(update, ctx):
         chat_id=update.effective_chat.id,
         text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
+
+@run_async
+def single_tweet(update, ctx):
+  text = update.message.text
+  text = cutcmd(text)
+  
 
 @run_async
 def favs_users(update, ctx):

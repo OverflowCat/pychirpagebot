@@ -5,6 +5,7 @@ import tweepy
 import requests
 import string
 import random
+import db
 import pagination
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
@@ -33,13 +34,21 @@ def getApi():
 def save_imgs(imgurls):
   print("Saving " + ", ".join(imgurls))
   graphPicUrls = []
+  
   for pic in imgurls:
+    global fformat
     find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", pic)
     filename = 'temp_' + id_generator(5) + '.jpg'
     if pic.endswith('.png'):
       filename = pic.split(r"/")[-1]
+      fformat = "png"
     if find_hash != []:
-      pic = pic.replace(".jpg",".png", 1)
+      use_png = False
+      if use_png:
+        pic = pic.replace(".jpg",".png", 1)
+        fformat = "png"
+      else:
+        fformat = "jpg"
       # +"?format=jpg&name=orig"
       filename = find_hash[0].replace(r'/', "").replace(".jpg",".png", 1)
     print(r'/' + filename)
@@ -51,8 +60,11 @@ def save_imgs(imgurls):
       with open(filename, 'wb') as image:
         for chunk in request:
           image.write(chunk)
-    graphPicUrls.append(upload_image(filename))
+    graphfileurl = upload_image(filename)
+    graphPicUrls.append(graphfileurl)
     #os.remove(filename)
+    fsize = os.path.getsize(filename)
+    db.logimg(pic, graphfileurl, "CALCULATED_HASH", "UNKNOWN", fformat, fsize)
   return graphPicUrls
   # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
 
@@ -79,6 +91,17 @@ def get_user_link(user, html=False, id_str=False):
 
 # collect
 user_collect=[]
+
+def fetch_tweets(tweets):
+  graphs = []
+  for tweet in tweets:
+    graphs.append("")
+    
+
+def fetch_tweet(tweet, title=''):
+  # get username
+  if title == '':
+    title = "tweet"
 
 def fetchFavs(user, title=''):
   if user == "i":
