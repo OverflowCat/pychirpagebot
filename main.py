@@ -159,6 +159,14 @@ def followings(update, ctx):
         text=resu["url"])
 
 @run_async
+def voice_listener(update, ctx):
+  #print(update)
+  voi = update.message.voice
+  ctx.bot.send_message(chat_id=update.effective_chat.id,text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",parse_mode=telegram.ParseMode.MARKDOWN)
+  
+  
+  
+@run_async
 def plain_msg(update, ctx):
   print('msg')
   text = update.message.text
@@ -169,10 +177,9 @@ def plain_msg(update, ctx):
     print('User in link: ' + user)
     graf = graph.fetchUser(user, title=user)
     log(graf, user, 'user', text + ':timeline')
-    ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="*" + "Get user from link: " + user + "*\n" + graf["url"],
-        parse_mode=telegram.ParseMode.MARKDOWN)
+    ctx.bot.send_message(chat_id=update.effective_chat.id,
+    text="*" + "Get user from link: " + user + "*\n" + graf["url"],
+    parse_mode=telegram.ParseMode.MARKDOWN)
     print(graf)
 
 from telegram.ext import MessageHandler, CommandHandler, Filters
@@ -185,6 +192,7 @@ userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
 message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
+voice_handler = MessageHandler(Filters.voice, voice_listener)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
@@ -194,5 +202,6 @@ dispatcher.add_handler(duty_handler)
 dispatcher.add_handler(followings_handler)
 dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(userduty_handler)
+dispatcher.add_handler(voice_handler)
 # 拉清单
 updater.start_polling()
