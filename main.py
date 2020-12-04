@@ -53,7 +53,7 @@ def start(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=
-        "Please send a Twitter user's screen name (like `@twitter`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.",
+        "Please send me the link of any tweet directly or using the /user command plus the Twitter user's screen name (like `/user elonmask`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.\nYou can also forward voice messages to me to get the file sizes of them.",
         parse_mode=telegram.ParseMode.MARKDOWN)
 
 
