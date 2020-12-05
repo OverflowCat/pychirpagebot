@@ -103,7 +103,7 @@ def fetch_tweet(tweet, title=''):
   if title == '':
     title = "tweet"
 
-def fetchFavs(user, title=''):
+def fetchFavs(user="elonmusk", title=''):
   if user == "i":
     user = "2Lmwx"
   if title == "":
@@ -114,7 +114,7 @@ def fetchFavs(user, title=''):
   graf = graph.post(title=title, author='Twitter', text="".join(ooo))
   return graf
 
-def fetchUser(user, title=""):
+def fetchUser(user="elonmusk", title=""):
   if user == "ofc":
     user = "2Lmwx"
   if title == "":
