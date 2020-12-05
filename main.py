@@ -8,6 +8,7 @@ import os
 import duty
 import reg
 import db
+import json
 
 from datetime import datetime
 print("App started")
@@ -169,7 +170,16 @@ def voice_listener(update, ctx):
   voi = update.message.voice
   ctx.bot.send_message(chat_id=update.effective_chat.id,text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",parse_mode=telegram.ParseMode.MARKDOWN)
   
+@run_async
+def photo_uploader(update, ctx):
+  #print(update)
+  msg = update.message
+  file = bot.getFile(update.message.photo[-1].file_id)
+  #print(file)
+  #reply = json.dumps(msg.photo, sort_keys=True, indent=4, separators=(',', ': '))
+  graphfile = graph.save_img(file.file_path)
   
+  bot.send_message(chat_id=update.effective_chat.id,text=file.file_path+"\n\n"+graphfile)
   
 @run_async
 def plain_msg(update, ctx):
@@ -198,6 +208,8 @@ followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
 message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
 voice_handler = MessageHandler(Filters.voice, voice_listener)
+photo_handler = MessageHandler(Filters.photo, photo_uploader)
+
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
@@ -208,5 +220,7 @@ dispatcher.add_handler(followings_handler)
 dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(userduty_handler)
 dispatcher.add_handler(voice_handler)
+dispatcher.add_handler(photo_handler)
+
 # 拉清单
 updater.start_polling()
