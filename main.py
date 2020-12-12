@@ -179,7 +179,9 @@ def photo_uploader(update, ctx):
   #reply = json.dumps(msg.photo, sort_keys=True, indent=4, separators=(',', ': '))
   graphfile = graph.save_img(file.file_path)
   
-  bot.send_message(chat_id=update.effective_chat.id,text=file.file_path+"\n\n"+graphfile)
+  bot.send_message(chat_id=update.effective_chat.id,text=graphfile) 
+  # DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
+  # According to the documentation, link may expire after 1 h.
   
 @run_async
 def plain_msg(update, ctx):
