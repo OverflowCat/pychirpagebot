@@ -136,7 +136,10 @@ def dealWithTweets(tweets, **pa):
   output = []
   counter = 0
   bioInfo = ["", ""]
+
+  print(tweets)
   for t in tweets:
+    # db.logtweet(t.id ,t._json, t.user.id)
     counter += 1
     if counter == 1:
       if not pa["username"]: # 使用了 /user 故不需要每条推都显示作者用户名，因为都是一样的
@@ -192,8 +195,10 @@ def dealWithTweets(tweets, **pa):
     output.append("".join(htm))
   ooo = "".join(output)
   ooo = "".join(bioInfo) + ooo
-  print(ooo)
+  #print(ooo)
   ooo = ooo.replace('\n', '<br>')
+  db.logtweets([t._json for t in tweets])
+  # 放在 for t in tweets:... 前就不行
   return ooo
 
 def pagesTweets(tweets, **pa):
@@ -247,6 +252,5 @@ def userBio(userobj):
   print(ooo)
   return ooo
   
-  def p(text, title="Logs"):
-    graf = graph.post(title=title, author='Chirpage', text=text)
-  return graf
+def p(text, title="Logs"):
+  return graph.post(title=title, author='Chirpage', text=text)
