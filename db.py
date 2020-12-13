@@ -23,5 +23,7 @@ def logtweet(tid, json_content, uid):
 
 def logtweets(tweets):
   print(tweets)
-  tws.append_rows([[t["id_str"], json.dumps(t), t["user"]["id"]] for t in tweets])
-  
+  try:
+    tws.append_rows([[t["id_str"], json.dumps(t), t["user"]["id"]] for t in tweets])
+  except:
+    print("Google Sheets quota_limit")

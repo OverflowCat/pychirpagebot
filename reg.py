@@ -4,3 +4,17 @@ url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/s
 def is_status(url):
   return url_patt.match(url)
   
+duties = [
+  "matters.news/",
+  "telegra.ph/",
+  "graph.org/",
+  "zhihu.com/",
+  "rfa.",
+  "chinadigitaltime"
+  ]
+
+def is_duty(url):
+  for domain in duties:
+    if domain in url:
+      return True
+  return False
