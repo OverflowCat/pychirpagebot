@@ -202,7 +202,7 @@ def dealWithTweets(tweets, **pa):
     current_tweet = t._json
     if hasattr(t, "extended_entities"):
       e = t.extended_entities
-      print(json.dumps(e, sort_keys=True, indent=2, separators=(',', ': ')))
+      # print(json.dumps(e, sort_keys=True, indent=2, separators=(',', ': ')))
       v = e["media"][0]
       if v["type"] == "video":
         variants = v["video_info"]["variants"]
@@ -211,8 +211,9 @@ def dealWithTweets(tweets, **pa):
         variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
         sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
         print(json.dumps(sorted_variants, indent=2))
-        vid_url = save_imgs([sorted_variants[0]["url"]])
-        htm.append(f'<video><source src="{vid_url}" type="video/mp4></video>')
+        vid_url = save_img(sorted_variants[0]["url"])
+        print("vid_url: " + vid_url)
+        htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
         #(f'<video src="{vid_url}">')
    
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
