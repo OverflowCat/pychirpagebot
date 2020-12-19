@@ -62,11 +62,14 @@ def start(update, context):
 def arc_favs(update, ctx):
     text = update.message.text
     text = cutcmd(text)
+    sended_msg = ctx.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Now fetching @" + text + "'s likes…\nThis process may take several minutes, as we support archiving videos now.",
+        parse_mode=telegram.ParseMode.MARKDOWN)
     graf = graph.fetchFavs(text)
     log(graf, text, 'favs', text + ':favs')
-    ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="*" + text + "*\n" + graf["url"],
+    # Any send_* methods return the sent message object
+    sended_msg.edit_text(text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
     print(graf)
 
@@ -81,12 +84,12 @@ def arc_user(update, ctx):
   title = ""
   if splited != [text]:
     title = splited[1]
+  sended_msg = ctx.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Now fetching @" + text + "'s tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>", parse_mode=telegram.ParseMode.HTML)
   graf = graph.fetchUser(text, title=title)
   log(graf, text, 'user', text + ':timeline')
-  ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="*" + text + "*\n" + graf["url"],
-        parse_mode=telegram.ParseMode.MARKDOWN)
+  sended_msg.edit_text(text="<b>" + text + "</b>\n" + graf["url"], parse_mode=telegram.ParseMode.HTML)
   print(graf)
 
 @run_async

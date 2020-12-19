@@ -1,4 +1,3 @@
-import json
 import re
 import os
 import tweepy
@@ -7,6 +6,10 @@ import string
 import random
 import db
 import pagination
+import json
+
+current_tweet = ""
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
 from datetime import datetime
@@ -39,6 +42,10 @@ def save_imgs(imgurls):
     global fformat
     find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", pic)
     filename = 'temp_' + id_generator(5) + '.jpg'
+    if "video.twimg" in pic:
+      filename = 'temp_' + id_generator(5) + '.mp4'
+      fformat = 'mp4'
+      filename = pic.split('/')[-1].split("?")[0]
     if pic.endswith('.png'):
       filename = pic.split(r"/")[-1]
       fformat = "png"
@@ -189,7 +196,25 @@ def dealWithTweets(tweets, **pa):
       graphimgurls = save_imgs(imgurls)	
       graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]	
       htm.append("".join(graphimgshtml))
-
+    #print(t.entities)
+    
+    global current_tweet
+    current_tweet = t._json
+    if hasattr(t, "extended_entities"):
+      e = t.extended_entities
+      print(json.dumps(e, sort_keys=True, indent=2, separators=(',', ': ')))
+      v = e["media"][0]
+      if v["type"] == "video":
+        variants = v["video_info"]["variants"]
+        for vari in variants:
+          print(vari)
+        variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
+        sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
+        print(json.dumps(sorted_variants, indent=2))
+        vid_url = save_imgs([sorted_variants[0]["url"]])
+        htm.append(f'<video><source src="{vid_url}" type="video/mp4></video>')
+        #(f'<video src="{vid_url}">')
+   
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append("".join(htm))
