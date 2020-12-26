@@ -188,8 +188,8 @@ def photo_uploader(update, ctx):
   
 @run_async
 def plain_msg(update, ctx):
-  print('msg')
   text = update.message.text
+  print(text)
   if reg.is_status(text):
     regf = re.findall(r'com\/@?[a-zA-Z0-9_]+\/status', text)[0]
     spl = regf.split(r'/')
@@ -201,6 +201,14 @@ def plain_msg(update, ctx):
     text="*" + "Get user from link: " + user + "*\n" + graf["url"],
     parse_mode=telegram.ParseMode.MARKDOWN)
     print(graf)
+  elif reg.is_duty(text):
+    resp = duty.dm(text)
+    log('DUTY', text, 'duty', resp)
+    ctx.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="`" + text + "`\n" + resp,
+        parse_mode=telegram.ParseMode.MARKDOWN)
+    
 
 from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start)

@@ -9,8 +9,8 @@ duties = [
   "telegra.ph/",
   "graph.org/",
   "zhihu.com/",
-  "rfa.",
-  "chinadigitaltime"
+  "rfa.fi/",
+  "chinadigitaltimes.net/"
   ]
 
 def is_duty(url):
