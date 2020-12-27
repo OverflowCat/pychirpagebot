@@ -185,7 +185,21 @@ def photo_uploader(update, ctx):
   bot.send_message(chat_id=update.effective_chat.id,text=graphfile) 
   # DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
   # According to the documentation, link may expire after 1 h.
-  
+
+@run_async
+def file_keeper(update, ctx):
+  # print(update.message)
+  msg = update.message
+  siz = msg.document.file_size
+  sizmb = siz / 1024.0 ** 2
+  print(sizmb)
+  if sizmb >= 5:
+    msg.reply_text(r'_Your file exceeds the limit of *5MB*\._', parse_mode='MarkdownV2')
+  else:
+    file = bot.getFile(update.message.document.file_id)
+    graphfile = graph.save_img(file.file_path)
+    msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile) 
+
 @run_async
 def plain_msg(update, ctx):
   text = update.message.text
@@ -220,6 +234,7 @@ userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
 message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
+file_handler = MessageHandler(Filters.document.image, file_keeper)
 voice_handler = MessageHandler(Filters.voice, voice_listener)
 photo_handler = MessageHandler(Filters.photo, photo_uploader)
 
@@ -234,6 +249,7 @@ dispatcher.add_handler(ping_handler)
 dispatcher.add_handler(userduty_handler)
 dispatcher.add_handler(voice_handler)
 dispatcher.add_handler(photo_handler)
+dispatcher.add_handler(file_handler)
 
 # 拉清单
 updater.start_polling()
