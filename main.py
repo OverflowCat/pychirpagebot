@@ -10,7 +10,7 @@ import reg
 import db
 import json
 from telegram.ext.defaults import Defaults
-
+from telegram import ParseMode
 from datetime import datetime
 print("App started")
 
@@ -54,8 +54,9 @@ import logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO)
-#from telegram.ext.dispatcher import run_async
+from telegram.ext.dispatcher import run_async
 
+@run_async
 def start(update, context):
 	context.bot.send_message(
 	    chat_id=update.effective_chat.id,
@@ -63,7 +64,7 @@ def start(update, context):
 	    "Please send me the link of any tweet directly or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.\nYou can also forward voice messages to me to get the file sizes of them.",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
+@run_async
 def arc_favs(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -80,7 +81,7 @@ def arc_favs(update, ctx):
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 	print(graf)
 
-
+@telegram.ext.dispatcher.run_async
 def arc_user(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -122,7 +123,7 @@ def single_tweet(update, ctx):
 def favs_users(update, ctx):
 	pass
 
-
+@run_async
 def dutymachine(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -136,7 +137,7 @@ def dutymachine(update, ctx):
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
+@run_async
 def ping(update, ctx):
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
 
@@ -174,7 +175,7 @@ def followings(update, ctx):
 	print(resu)
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
-
+@run_async
 def voice_listener(update, ctx):
 	#print(update)
 	voi = update.message.voice
@@ -184,7 +185,7 @@ def voice_listener(update, ctx):
 	    f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
+@run_async
 def photo_uploader(update, ctx):
 	#print(update)
 	msg = update.message
@@ -213,7 +214,7 @@ def file_keeper(update, ctx):
 		graphfile = graph.save_img(file.file_path)
 		msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
 
-
+@run_async
 def plain_msg(update, ctx):
 	text = update.message.text
 	print(text)
