@@ -224,10 +224,8 @@ def plain_msg(update, ctx):
 		print('User in link: ' + user)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
-		ctx.bot.send_message(
-		    chat_id=update.effective_chat.id,
-		    text="*" + "Get user from link: " + user + "*\n" + graf["url"],
-		    parse_mode=telegram.ParseMode.MARKDOWN)
+		#ctx.bot.send_message(
+		update.message.reply_markdown(quote=True, text="*" + "Get user from link: " + user + "*\n" + graf["url"])
 		print(graf)
 	elif reg.is_duty(text):
 		resp = duty.dm(text)
