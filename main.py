@@ -9,6 +9,7 @@ import duty
 import reg
 import db
 import json
+from telegram.ext.defaults import Defaults
 
 from datetime import datetime
 print("App started")
@@ -43,7 +44,8 @@ def cutcmd(msg_txt):
 
 myfllwings = []
 
-bot = telegram.Bot(token=os.environ["chirpage"])
+defaults = Defaults(parse_mode=ParseMode.HTML, run_async=True)
+bot = telegram.Bot(token=os.environ["chirpage"], defaults=defaults)
 from telegram.ext import Updater
 updater = Updater(os.environ["chirpage"], use_context=True)
 dispatcher = updater.dispatcher
@@ -53,8 +55,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO)
 #from telegram.ext.dispatcher import run_async
-telegram.ext.Defaults.run_async = True
-
 
 def start(update, context):
 	context.bot.send_message(
