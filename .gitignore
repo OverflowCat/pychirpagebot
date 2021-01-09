@@ -5,3 +5,4 @@ temp/*
 .gstoken.json
 ffmpeg
 ffprobe
+__pycache__

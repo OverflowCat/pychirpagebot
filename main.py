@@ -56,6 +56,7 @@ logging.basicConfig(
     level=logging.INFO)
 from telegram.ext.dispatcher import run_async
 
+
 @run_async
 def start(update, context):
 	context.bot.send_message(
@@ -64,6 +65,7 @@ def start(update, context):
 	    "Please send me the link of any tweet directly or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.\nYou can also forward voice messages to me to get the file sizes of them.",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
+
 @run_async
 def arc_favs(update, ctx):
 	text = update.message.text
@@ -71,15 +73,14 @@ def arc_favs(update, ctx):
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
 	    text="Now fetching @" + text +
-	    "'s likes…\nThis process may take several minutes, as we support archiving videos now.",
-	    parse_mode=telegram.ParseMode.MARKDOWN)
-	graf = graph.fetchFavs(text)
-	log(graf, text, 'favs', text + ':favs')
-	# Any send_* methods return the sent message object
+	    "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+	    parse_mode=telegram.ParseMode.HTML)
+	log(graf, "favs", text, "2Lmwx" + ':favs')
 	sended_msg.edit_text(
 	    text="*" + text + "*\n" + graf["url"],
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 	print(graf)
+
 
 @telegram.ext.dispatcher.run_async
 def arc_user(update, ctx):
@@ -93,8 +94,8 @@ def arc_user(update, ctx):
 		title = splited[1]
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
-	    text="Now fetching @" + text +
-	    "'s tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+	    text=
+	    f"Now fetching user @{text}'s tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchUser(text, title=title)
 	log(graf, text, 'user', text + ':timeline')
@@ -102,6 +103,16 @@ def arc_user(update, ctx):
 	    text="<b>" + text + "</b>\n" + graf["url"],
 	    parse_mode=telegram.ParseMode.HTML)
 	print(graf)
+
+def arc_timeline(update, ctx):
+	sended_msg = ctx.bot.send_message(
+	    chat_id=update.effective_chat.id,text="Now fetching timeline tweets…",
+	    parse_mode=telegram.ParseMode.MARKDOWN)
+	graf = graph.fetchTimeline()
+	log(graf, "tl", 'timeline', "2Lmwx" + ':favs')
+	sended_msg.edit_text(
+	    text="*" + " Timeline tweets" + "*\n" + graf["url"],
+	    parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def search_tweets(update, ctx):
@@ -123,6 +134,7 @@ def single_tweet(update, ctx):
 def favs_users(update, ctx):
 	pass
 
+
 @run_async
 def dutymachine(update, ctx):
 	text = update.message.text
@@ -136,6 +148,7 @@ def dutymachine(update, ctx):
 	    chat_id=update.effective_chat.id,
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 @run_async
 def ping(update, ctx):
@@ -175,6 +188,7 @@ def followings(update, ctx):
 	print(resu)
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
+
 @run_async
 def voice_listener(update, ctx):
 	#print(update)
@@ -184,6 +198,7 @@ def voice_listener(update, ctx):
 	    text=
 	    f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 @run_async
 def photo_uploader(update, ctx):
@@ -214,6 +229,7 @@ def file_keeper(update, ctx):
 		graphfile = graph.save_img(file.file_path)
 		msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
 
+
 @run_async
 def plain_msg(update, ctx):
 	text = update.message.text
@@ -226,7 +242,9 @@ def plain_msg(update, ctx):
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
 		#ctx.bot.send_message(
-		update.message.reply_markdown(quote=True, text="*" + "Get user from link: " + user + "*\n" + graf["url"])
+		update.message.reply_markdown(
+		    quote=True,
+		    text="*" + "Get user from link: " + user + "*\n" + graf["url"])
 		print(graf)
 	elif reg.is_duty(text):
 		resp = duty.dm(text)
@@ -241,6 +259,8 @@ from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start)
 favs_handler = CommandHandler('favs', arc_favs)
 user_handler = CommandHandler('user', arc_user)
+timeline_handler = CommandHandler("timeline", arc_timeline)
+tl_handler = CommandHandler("tl", arc_timeline)
 search_handler = CommandHandler('search', search_tweets)
 duty_handler = CommandHandler('duty', dutymachine)
 userduty_handler = CommandHandler('userduty', userduty)
@@ -258,6 +278,8 @@ dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
+dispatcher.add_handler(timeline_handler)
+dispatcher.add_handler(tl_handler)
 # dispatcher.add_handler(search_handler)
 dispatcher.add_handler(duty_handler)
 dispatcher.add_handler(followings_handler)

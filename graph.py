@@ -132,6 +132,12 @@ def fetchUser(user="elonmusk", title=""):
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
+def fetchTimeline(user=""):
+  tweets = api.home_timeline(tweet_mode="extended")
+  ooo = dealWithTweets(tweets, username=True)
+  graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(ooo))
+  return graf
+
 def search(query, title='text'):
   print('Searching "' + query + '"')
   search_results = api.search(q=query, count=65, tweet_mode='extended')
