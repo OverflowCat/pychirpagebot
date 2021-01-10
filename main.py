@@ -9,6 +9,8 @@ import duty
 import reg
 import db
 import json
+import auto
+auto.add(print("test", 5))
 from telegram.ext.defaults import Defaults
 from telegram import ParseMode
 from datetime import datetime

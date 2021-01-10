@@ -7,8 +7,11 @@ import random
 import db
 import pagination
 import json
+import select
+from tweets import *
 
 current_tweet = ""
+use_png = False
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
@@ -34,7 +37,51 @@ def getTweepy():
 def getApi():
   return api
 
+def save_img(url):
+  print("Saving " + url)
+  global fformat
+  find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", url)
+  filename = 'temp_' + id_generator(5) + '.jpg'
+  if "video.twimg" in url:
+    filename = 'temp_' + id_generator(5) + '.mp4'
+    fformat = 'mp4'
+    filename = url.split('/')[-1].split("?")[0]
+  if url.endswith('.png'):
+    filename = url.split(r"/")[-1]
+    fformat = "png"
+  if find_hash != []:
+    if use_png:
+      url = url.replace(".jpg",".png", 1)
+      fformat = "png"
+    else:
+      fformat = "jpg"
+    # +"?format=jpg&name=orig"
+    filename = find_hash[0].replace(r'/', "").replace(".jpg",".png", 1)
+  print(r'/' + filename)
+  filename = temp_dir + "/" + filename
+  if os.path.exists(filename):
+    print("Duplicate " + url)
+  request = requests.get(url.replace(r"http://", r"https://"), stream=True)
+  if request.status_code == 200:
+    with open(filename, 'wb') as image:
+      for chunk in request:
+        image.write(chunk)
+  else:
+    print(f"Download {url} failed.")
+    return ""
+  try:
+    graphfileurl = upload_image(filename)
+  except:
+    print(f"Upload {filename} failed.")
+    return ""
+  else:
+    return graphfileurl
+
 def save_imgs(imgurls):
+  print("Saving " + ", ".join(imgurls))
+  return [save_img(x) for x in imgurls]
+
+def old_save_imgs(imgurls):
   print("Saving " + ", ".join(imgurls))
   graphPicUrls = []
   
@@ -50,7 +97,6 @@ def save_imgs(imgurls):
       filename = pic.split(r"/")[-1]
       fformat = "png"
     if find_hash != []:
-      use_png = False
       if use_png:
         pic = pic.replace(".jpg",".png", 1)
         fformat = "png"
@@ -75,7 +121,7 @@ def save_imgs(imgurls):
   return graphPicUrls
   # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
 
-def save_img(imgurl):
+def old_save_img(imgurl):
   res = save_imgs([imgurl])
   if len(res) == 1:
     return res[0]
