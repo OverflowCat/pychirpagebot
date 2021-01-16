@@ -68,7 +68,7 @@ def start(update, context):
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-@run_async
+#@run_async
 def arc_favs(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -77,6 +77,7 @@ def arc_favs(update, ctx):
 	    text="Now fetching @" + text +
 	    "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
+	graf = graph.fetchFavs(text)
 	log(graf, "favs", text, "2Lmwx" + ':favs')
 	sended_msg.edit_text(
 	    text="*" + text + "*\n" + graf["url"],

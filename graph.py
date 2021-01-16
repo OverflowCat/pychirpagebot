@@ -160,7 +160,7 @@ def fetchFavs(user="elonmusk", title=''):
   if user == "i":
     user = "2Lmwx"
   if title == "":
-    title = user + "-favs-" + id_generator(3)
+    title = user + "-favs-" + id_generator(2)
   print("Fetching @" + user + "'s favorites")
   tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(63)
   ooo = dealWithTweets(tweets, username=True)
