@@ -50,6 +50,7 @@ def save_img(url):
     filename = url.split(r"/")[-1]
     fformat = "png"
   if find_hash != []:
+    global use_png
     if use_png:
       url = url.replace(".jpg",".png", 1)
       fformat = "png"
