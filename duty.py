@@ -10,7 +10,6 @@ def dm(article_url):
   #print(res.text)
   issueID = re.findall(r'data-url="/duty-machine/duty-machine/issues/[0-9]+/show_partial', res.text)[0] #str
   issueID = getMiddleText(issueID, r'data-url="/duty-machine/duty-machine/issues/', r'/show_partial')
-  print(issueID)
   print(article_url + "\n Issue " + issueID)
   issueURL = r"https://github.com/duty-machine/duty-machine/issues/" + issueID
   return issueURL

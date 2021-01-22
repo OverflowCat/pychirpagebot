@@ -15,6 +15,7 @@ Pillow = "^8.0.1"
 python-bidi = "^0.4.2"
 pysos = "^1.2.1"
 schedule = "^0.6.0"
+textile = "^4.0.1"
 
 [tool.poetry.dev-dependencies]
 

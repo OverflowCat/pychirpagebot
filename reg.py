@@ -10,11 +10,24 @@ duties = [
   "graph.org/",
   "zhihu.com/",
   "rfa.fi/",
-  "chinadigitaltimes.net/"
+  "chinadigitaltimes.net/",
+  "mp.weixin.qq.com/",
+  "archive.",
+  "web.archive.org/",
+  "douban.com/",
+  "weibo.com/", "weibo.cn/"
   ]
+# Refer to https://github.com/duty-machine/duty-machine-action/tree/master/websites
 
 def is_duty(url):
   for domain in duties:
-    if domain in url:
+    if "http://" + domain in url or "https://" + domain in url:
+    # Duty Machine requires protocol name
       return True
   return False
+
+def escape(markdown_v2_text):
+  escaped = markdown_v2_text
+  for char in ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
+    escaped = escaped.replace(char, "\\" + char)
+  return escaped

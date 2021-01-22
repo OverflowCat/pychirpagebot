@@ -13,6 +13,10 @@ from tweets import *
 current_tweet = ""
 use_png = False
 
+### debug ###
+# ltw: last fetched tweets
+
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
 from datetime import datetime
@@ -232,8 +236,8 @@ def dealWithTweets(tweets, **pa):
         repl += _in_reply_to_status_id_str + '</a>'
       htm.append(repl)
       
-    #deal with text
-    status_text  = t.full_text #extended_mode
+    # deal with text
+    status_text = t.full_text #extended_mode
     if status_text.startswith("RT @") & status_text.endswith("…"):
       # This may be a retweet with over 140 chars
       if hasattr(t, 'retweeted_status'):

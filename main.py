@@ -9,6 +9,7 @@ import duty
 import reg
 import db
 import json
+import publish
 
 from telegram.ext.defaults import Defaults
 from telegram import ParseMode
@@ -41,7 +42,6 @@ def cutcmd(msg_txt):
 	seps.pop(0)
 	return ' '.join(seps)
 	#return re.sub(cmdre, "", msg_txt)
-
 
 myfllwings = []
 
@@ -168,6 +168,10 @@ def userduty(update, ctx):
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
+def textilegraph(update, ctx):
+  text = cutcmd(update.message.text)
+  graf = publish.txtile(text)
+  update.message.reply_markdown_v2("`" + reg.escape(graf) + "`")
 
 def followings(update, ctx):
 	text = update.message.text
@@ -215,7 +219,6 @@ def photo_uploader(update, ctx):
 	# DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
 	# According to the documentation, link may expire after 1 h.
 
-
 def file_keeper(update, ctx):
 	# print(update.message)
 	msg = update.message
@@ -230,7 +233,6 @@ def file_keeper(update, ctx):
 		file = bot.getFile(update.message.document.file_id)
 		graphfile = graph.save_img(file.file_path)
 		msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
-
 
 @run_async
 def plain_msg(update, ctx):
@@ -268,6 +270,7 @@ duty_handler = CommandHandler('duty', dutymachine)
 userduty_handler = CommandHandler('userduty', userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler('ping', ping)
+textile_handler = CommandHandler('textile', textilegraph)
 message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
 file_handler = MessageHandler(
     Filters.document.image & Filters.chat_type.private, file_keeper)
@@ -275,7 +278,6 @@ voice_handler = MessageHandler(Filters.voice & Filters.chat_type.private,
                                voice_listener)
 photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
                                photo_uploader)
-print(Filters.chat_type.private)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
@@ -286,6 +288,7 @@ dispatcher.add_handler(tl_handler)
 dispatcher.add_handler(duty_handler)
 dispatcher.add_handler(followings_handler)
 dispatcher.add_handler(ping_handler)
+dispatcher.add_handler(textile_handler)
 dispatcher.add_handler(userduty_handler)
 dispatcher.add_handler(voice_handler)
 dispatcher.add_handler(photo_handler)
