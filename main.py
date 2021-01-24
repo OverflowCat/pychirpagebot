@@ -18,7 +18,6 @@ print("App started")
 
 import requests
 
-
 def log(_path, _user, _type, _query):
 	r = requests.post(
 	    os.environ["CHSHDB"],
@@ -33,9 +32,7 @@ def log(_path, _user, _type, _query):
 	    })
 	return r.json()
 
-
 cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
-
 
 def cutcmd(msg_txt):
 	seps = msg_txt.split(" ")
@@ -57,8 +54,6 @@ logging.basicConfig(
     level=logging.INFO)
 from telegram.ext.dispatcher import run_async
 
-
-@run_async
 def start(update, context):
 	context.bot.send_message(
 	    chat_id=update.effective_chat.id,
@@ -66,8 +61,6 @@ def start(update, context):
 	    "Please send me the link of any tweet directly or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.\nYou can also forward voice messages to me to get the file sizes of them.",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
-@run_async
 def arc_favs(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -77,27 +70,32 @@ def arc_favs(update, ctx):
 	    "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchFavs(text)
-	log(graf, "favs", text, "2Lmwx" + ':favs')
+	# log(graf, "favs", text, "2Lmwx" + ':favs')
 	sended_msg.edit_text(
 	    text="*" + text + "*\n" + graf["url"],
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 	print(graf)
 
-
-@telegram.ext.dispatcher.run_async
+# @telegram.ext.dispatcher.run_async
 def arc_user(update, ctx):
 	text = update.message.text
-	text = cutcmd(text)
 	if text == "":
 		text = "elonmusk"
+	else:
+		if "twitter.com" not in text:
+			text = cutcmd(text)
+		else:
+			text = text.split('/')[-1]
 	splited = text.split(" as ")
 	title = ""
+	as_what = ""
 	if splited != [text]:
 		title = splited[1]
+		as_what = " as " + title
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
 	    text=
-	    f"Now fetching user @{text}'s tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+	    f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchUser(text, title=title)
 	log(graf, text, 'user', text + ':timeline')
@@ -136,8 +134,6 @@ def single_tweet(update, ctx):
 def favs_users(update, ctx):
 	pass
 
-
-@run_async
 def dutymachine(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -151,11 +147,8 @@ def dutymachine(update, ctx):
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
-@run_async
 def ping(update, ctx):
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
-
 
 def userduty(update, ctx):
 	text = update.message.text
@@ -194,8 +187,6 @@ def followings(update, ctx):
 	print(resu)
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
-
-@run_async
 def voice_listener(update, ctx):
 	#print(update)
 	voi = update.message.voice
@@ -205,8 +196,6 @@ def voice_listener(update, ctx):
 	    f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
-
-@run_async
 def photo_uploader(update, ctx):
 	#print(update)
 	msg = update.message
@@ -234,7 +223,6 @@ def file_keeper(update, ctx):
 		graphfile = graph.save_img(file.file_path)
 		msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
 
-@run_async
 def plain_msg(update, ctx):
 	text = update.message.text
 	print(text)
@@ -249,7 +237,9 @@ def plain_msg(update, ctx):
 		update.message.reply_markdown(
 		    quote=True,
 		    text="*" + "Get user from link: " + user + "*\n" + graf["url"])
-		print(graf)
+		print(graf)	
+	elif reg.is_user_profile_page(text):
+		arc_user(update, ctx)
 	elif reg.is_duty(text):
 		resp = duty.dm(text)
 		log('DUTY', text, 'duty', resp)
@@ -260,30 +250,29 @@ def plain_msg(update, ctx):
 
 
 from telegram.ext import MessageHandler, CommandHandler, Filters
-start_handler = CommandHandler('start', start)
-favs_handler = CommandHandler('favs', arc_favs)
-user_handler = CommandHandler('user', arc_user)
-timeline_handler = CommandHandler("timeline", arc_timeline)
-tl_handler = CommandHandler("tl", arc_timeline)
-search_handler = CommandHandler('search', search_tweets)
-duty_handler = CommandHandler('duty', dutymachine)
-userduty_handler = CommandHandler('userduty', userduty)
-followings_handler = CommandHandler("followings", followings)
+start_handler = CommandHandler('start', start, run_async=True)
+favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
+user_handler = CommandHandler(['user', 'twitter'], arc_user, run_async=True)
+timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline, run_async=True)
+# command: Union[str, List[str], Tuple[str, ...]]
+search_handler = CommandHandler('search', search_tweets, run_async=True)
+duty_handler = CommandHandler(['duty', 'dm', "dutymachine"], dutymachine, run_async=True)
+userduty_handler = CommandHandler('userduty', userduty, run_async=True)
+followings_handler = CommandHandler("followings", followings, run_async=True)
 ping_handler = CommandHandler('ping', ping)
 textile_handler = CommandHandler('textile', textilegraph)
-message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg)
+message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg, run_async=True)
 file_handler = MessageHandler(
-    Filters.document.image & Filters.chat_type.private, file_keeper)
+    Filters.document.image & Filters.chat_type.private, file_keeper, run_async=True)
 voice_handler = MessageHandler(Filters.voice & Filters.chat_type.private,
-                               voice_listener)
+                               voice_listener, run_async=True)
 photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
-                               photo_uploader)
+                               photo_uploader, run_async=True)
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
 dispatcher.add_handler(timeline_handler)
-dispatcher.add_handler(tl_handler)
 # dispatcher.add_handler(search_handler)
 dispatcher.add_handler(duty_handler)
 dispatcher.add_handler(followings_handler)

@@ -141,7 +141,7 @@ def tco(texto):
 def get_user_link(user, html=False, id_str=False):
   link = r"https://twitter.com/" + user.screen_name
   if html:
-    user_html = f'<a hr ef="{link}">@{user.screen_name}</a>'
+    user_html = f'<a href="{link}">@{user.screen_name}</a>'
     if id_str:
       return user_html + ' <code>_' + user.id_str + r"</code>"
     return user_html
@@ -154,7 +154,6 @@ def fetch_tweets(tweets):
   graphs = []
   for tweet in tweets:
     graphs.append("")
-    
 
 def fetch_tweet(tweet, title=''):
   # get username
@@ -167,9 +166,9 @@ def fetchFavs(user="elonmusk", title=''):
   if title == "":
     title = user + "-favs-" + id_generator(2)
   print("Fetching @" + user + "'s favorites")
-  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(63)
+  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=True)
-  graf = graph.post(title=title, author='Twitter', text="".join(ooo))
+  graf = graph.post(title=title, author='Twitter Likes', text="".join(ooo))
   return graf
 
 def fetchUser(user="elonmusk", title=""):
@@ -197,6 +196,8 @@ def search(query, title='text'):
   return graf
 
 def dealWithTweets(tweets, **pa):
+  global dwt
+  dwt = tweets
   output = []
   counter = 0
   bioInfo = ["", ""]
@@ -224,7 +225,7 @@ def dealWithTweets(tweets, **pa):
         repl = '<p><strong>↬</strong> # <a href="' + replurl + '">' + t.in_reply_to_status_id_str + "</a>"
       else:
         replurl = "https://twitter.com/" + t.in_reply_to_screen_name
-        in_reply_to_status_id_str_attr = getattr(t, 'in_reply_to_status_id_str') #被屏蔽这里就是 NoneType
+        in_reply_to_status_id_str_attr = getattr(t, 'in_reply_to_status_id_str') # 被屏蔽这里就是 NoneType
         if in_reply_to_status_id_str_attr is not None:
           replurl = replurl + "/status/" + t.in_reply_to_status_id_str
           _in_reply_to_status_id_str =  t.in_reply_to_status_id_str #the text

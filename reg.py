@@ -3,7 +3,11 @@ import re
 url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?', flags=re.IGNORECASE)
 def is_status(url):
   return url_patt.match(url)
-  
+
+profile_url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/?', flags=re.IGNORECASE)
+def is_user_profile_page(url):
+  return profile_url_patt.match(url)
+
 duties = [
   "matters.news/",
   "telegra.ph/",
@@ -21,9 +25,10 @@ duties = [
 
 def is_duty(url):
   for domain in duties:
-    if "http://" + domain in url or "https://" + domain in url:
+    if domain in url:
+      if "http" in url.lower():
     # Duty Machine requires protocol name
-      return True
+        return True
   return False
 
 def escape(markdown_v2_text):
