@@ -16,6 +16,8 @@ python-bidi = "^0.4.2"
 pysos = "^1.2.1"
 schedule = "^0.6.0"
 textile = "^4.0.1"
+msgpack = "^1.0.2"
+tinydb = "^4.3.0"
 
 [tool.poetry.dev-dependencies]
 

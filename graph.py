@@ -42,6 +42,11 @@ def getApi():
   return api
 
 def save_img(url):
+  raw_url = url
+  res = db.lookup_pic(raw_url)
+  if res != "":
+    print(f"Reusing {res} for {raw_url}…")
+    return res
   print("Saving " + url)
   global fformat
   find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", url)
@@ -80,6 +85,7 @@ def save_img(url):
     print(f"Upload {filename} failed.")
     return ""
   else:
+    db.associate_pic(raw_url, graphfileurl)
     return graphfileurl
 
 def save_imgs(imgurls):
@@ -201,9 +207,9 @@ def dealWithTweets(tweets, **pa):
   output = []
   counter = 0
   bioInfo = ["", ""]
-
   print(tweets)
   for t in tweets:
+    db.save_tweet(t._json)
     # db.logtweet(t.id ,t._json, t.user.id)
     counter += 1
     if counter == 1:
