@@ -168,7 +168,7 @@ def fetch_tweet(tweet, title=''):
 
 def fetchFavs(user="elonmusk", title=''):
   if user == "i":
-    user = "2Lmwx"
+    user = "twitter"
   if title == "":
     title = user + "-favs-" + id_generator(2)
   print("Fetching @" + user + "'s favorites")
@@ -179,7 +179,7 @@ def fetchFavs(user="elonmusk", title=''):
 
 def fetchUser(user="elonmusk", title=""):
   if user == "ofc":
-    user = "2Lmwx"
+    user = "elonmusk"
   if title == "":
     title = "@" + user
   print("Fetching @" + user)

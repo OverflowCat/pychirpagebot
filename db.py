@@ -6,6 +6,7 @@ from tinydb import TinyDB, Query
 tdb = TinyDB('db.json')
 pdb = TinyDB('dbpack.json')
 def save_tweet(json_data):
+  return
   if isinstance(json_data, str):
     json_data = json.load(json_data)
   tdb.insert(json_data)
@@ -17,9 +18,11 @@ def save_tweet(json_data):
 
 picdb = TinyDB("pic.json")
 def associate_pic(rawimg, graphfile):
+  return
   picdb.insert({"r": rawimg, "g": graphfile})
 
 def lookup_pic(rawimg):
+  return ""
   Image = Query()
   results = picdb.search(Image.r == rawimg)
   if results != []:

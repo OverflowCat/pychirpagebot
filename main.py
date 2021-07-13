@@ -64,6 +64,8 @@ def start(update, context):
 def arc_favs(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
+	if text == "":
+		text = "2LMWX"
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
 	    text="Now fetching @" + text +
@@ -135,6 +137,11 @@ def favs_users(update, ctx):
 	pass
 
 def dutymachine(update, ctx):
+	ctx.bot.send_message(
+	    chat_id=update.effective_chat.id,
+	    text="Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command.",
+	    parse_mode=telegram.ParseMode.MARKDOWN)
+	"""
 	text = update.message.text
 	text = cutcmd(text)
 	if len(text) <= 6:
@@ -146,6 +153,7 @@ def dutymachine(update, ctx):
 	    chat_id=update.effective_chat.id,
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
+	"""
 
 def ping(update, ctx):
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
@@ -241,13 +249,15 @@ def plain_msg(update, ctx):
 	elif reg.is_user_profile_page(text):
 		arc_user(update, ctx)
 	elif reg.is_duty(text):
+		dutymachine(update, ctx)
+		"""
 		resp = duty.dm(text)
 		log('DUTY', text, 'duty', resp)
 		ctx.bot.send_message(
 		    chat_id=update.effective_chat.id,
 		    text="`" + text + "`\n" + resp,
 		    parse_mode=telegram.ParseMode.MARKDOWN)
-
+		"""
 
 from telegram.ext import MessageHandler, CommandHandler, Filters
 start_handler = CommandHandler('start', start, run_async=True)
