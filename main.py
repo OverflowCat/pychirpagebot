@@ -58,7 +58,9 @@ def start(update, context):
 	context.bot.send_message(
 	    chat_id=update.effective_chat.id,
 	    text=
-	    "Please send me the link of any tweet directly or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.\nYou can also forward voice messages to me to get the file sizes of them.",
+	    """Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
+		You can also forward voice messages to me to get the file sizes of them.
+		Duty Machine service is temporarily down due to GitHub's term of service.""",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
 def arc_favs(update, ctx):

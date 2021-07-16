@@ -47,7 +47,7 @@ def save_img(url):
   if res != "":
     print(f"Reusing {res} for {raw_url}…")
     return res
-  print("Saving " + url)
+  # print("Saving " + url)
   global fformat
   find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", url)
   filename = 'temp_' + id_generator(5) + '.jpg'

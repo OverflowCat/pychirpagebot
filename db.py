@@ -1,68 +1,95 @@
-import gspread
+import os
+import re
 import json
+import pymysql.cursors
 
-import msgpack
-from tinydb import TinyDB, Query
-tdb = TinyDB('db.json')
-pdb = TinyDB('dbpack.json')
+def exe(operation):
+# Connect to the database
+  connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
+                             user=os.environ['PYCMYSQLUSER'],
+                             password=os.environ['PYCMYSQLPWD'],
+                             database='twimg',
+                             cursorclass=pymysql.cursors.DictCursor)
+  with connection:
+      with connection.cursor() as cursor:
+          cursor.execute(operation)
+      # connection is not autocommit by default. So you must commit to save
+      # your changes.
+      connection.commit()
+
+def get(operation, needcommit=False):
+# Connect to the database
+  connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
+                             user=os.environ['PYCMYSQLUSER'],
+                             password=os.environ['PYCMYSQLPWD'],
+                             database='twimg',
+                             cursorclass=pymysql.cursors.DictCursor)
+  with connection.cursor() as cursor:
+    cursor.execute(operation)
+  if needcommit:
+    connection.commit()
+  return cursor.fetchall()
+
+def newformat(fmtname):
+  exe(f"""CREATE TABLE `{fmtname}`(
+       twitter varchar(18) primary key,
+       telegraph char(21) not null,
+       tweetid bigint(20),
+       createtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);""")
+
 def save_tweet(json_data):
-  return
-  if isinstance(json_data, str):
-    json_data = json.load(json_data)
-  tdb.insert(json_data)
-  #save_packed_tweet(json_data)
+  return True
 
-#def save_packed_tweet(json_obj):
-  #tdb.insert({"i": json_obj["id_str"], "p": msgpack.packb(json_obj, use_bin_type=False)})
-	# print(msgpack.packb(json_obj, use_bin_type=False))
-
-picdb = TinyDB("pic.json")
-def associate_pic(rawimg, graphfile):
-  return
-  picdb.insert({"r": rawimg, "g": graphfile})
+def associate_pic(twimgurl, grafurl):
+  find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.(jpe?g|png)$", twimgurl)
+  if find_hash != []:
+    twimgid = twimgurl.split(".")[-2].split("/")[-1]
+  else:
+    return False
+  grafid = grafurl.split("/")[-1]
+  # if "." in grafid:
+  grafid = grafid.split(".")[0] # "aaa".split(".") == ["aaa"]
+  print("DB: ", twimgid, grafid)
+  _t = twimgurl.split(".")[-1]
+  if "jpg" in _t or "jpeg" in _t:
+    mediaformat = "jpg"
+  elif "png" in _t:
+    mediaformat = "png"
+  exe(f"""INSERT INTO `{mediaformat}`
+  (`twitter`, `telegraph`)
+  VALUES
+  ("{twimgid}", "{grafid}")""")
+  return True
 
 def lookup_pic(rawimg):
   return ""
-  Image = Query()
-  results = picdb.search(Image.r == rawimg)
-  if results != []:
-    return results[0]["g"]
+
+## DEPRECATED
+def logimg(url, telegraphfileurl, imgid, src, mediaformat, size):
+  find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.(jpe?g|png)$", url)
+  if find_hash != []:
+    twimgid = url.split(".")[-2].split("/")[-1]
   else:
-    return ""
+    return False
+  telegraphfileid = telegraphfileurl.split("/")[-1]
+  print("DB: ", twimgid, telegraphfileid)
+  if False:
+    try:
+      exe(f"""INSERT INTO `{mediaformat}`
+  (`twitter`, `telegraph`)
+  VALUES
+  ("{twimgid}", "{telegraphfileid}")""")
+    except:
+      print('Got error')
+      return False
+  return True
 
-gc = gspread.service_account('.gstoken.json')
-imgsh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1-R1mFwvI5lxmL4ogJZ64esEQcHZ12sXj1o_KCyoK3rg/edit?usp=drivesdk")
-
-rawtweets = gc.open_by_url("https://docs.google.com/spreadsheets/d/1qk1-nWxFh5o8Z-3bnx6t_99tGtbuIsKdG67B_nzsakA/edit?usp=sharing")
-
-msgspread = gc.open_by_url("https://docs.google.com/spreadsheets/d/1b90DbQNGfXdl9CFAbwYF6kogGi0D2bXelH3xo4VPnqI/edit?usp=drivesdk")
-
-#print(sh.sheet1.get('A1'))
-ws = imgsh.sheet1
-#ws.append_row(['u','t', 'h', 's'])
-tws = rawtweets.sheet1
-
-mws = msgspread.sheet1
-
-def logimg(url, telegraphfileurl, imgid, src, fmt, size):
-  ws.append_row([url, telegraphfileurl, imgid, src, fmt, size])
-  
 def logtweet(tid, json_content, uid):
-  if type(json_content) != type("{str}"):
-    json_content = json.dumps(json_content)
-  row_data = [tid, json_content, uid]
-  print(row_data)
-  tws.append_row(row_data)
+  return 
 
 def logtweets(tweets):
-  print(tweets)
-  try:
-    tws.append_rows([[t["id_str"], json.dumps(t), t["user"]["id"]] for t in tweets])
-  except:
-    print("Google Sheets quota_limit")
-    
+  return
+
 def logmsgs(msg):
-  try:
-    mws.append_row(msg)
-  except:
-    print("Google Sheets quota_limit")
+  return
