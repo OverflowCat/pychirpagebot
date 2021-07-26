@@ -5,29 +5,36 @@ import pymysql.cursors
 
 def exe(operation):
 # Connect to the database
-  connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
-                             user=os.environ['PYCMYSQLUSER'],
-                             password=os.environ['PYCMYSQLPWD'],
-                             database='twimg',
-                             cursorclass=pymysql.cursors.DictCursor)
-  with connection:
-      with connection.cursor() as cursor:
-          cursor.execute(operation)
-      # connection is not autocommit by default. So you must commit to save
-      # your changes.
-      connection.commit()
+  try:
+    connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
+                              user=os.environ['PYCMYSQLUSER'],
+                              password=os.environ['PYCMYSQLPWD'],
+                              database='twimg',
+                              cursorclass=pymysql.cursors.DictCursor)
+    with connection:
+        with connection.cursor() as cursor:
+            cursor.execute(operation)
+        # connection is not autocommit by default. So you must commit to save
+        # your changes.
+        connection.commit()
+  except:
+    print("DB ERR!")
 
 def get(operation, needcommit=False):
 # Connect to the database
-  connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
-                             user=os.environ['PYCMYSQLUSER'],
-                             password=os.environ['PYCMYSQLPWD'],
-                             database='twimg',
-                             cursorclass=pymysql.cursors.DictCursor)
-  with connection.cursor() as cursor:
-    cursor.execute(operation)
-  if needcommit:
-    connection.commit()
+  try:
+    connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
+                              user=os.environ['PYCMYSQLUSER'],
+                              password=os.environ['PYCMYSQLPWD'],
+                              database='twimg',
+                              cursorclass=pymysql.cursors.DictCursor)
+    with connection.cursor() as cursor:
+      cursor.execute(operation)
+    if needcommit:
+      connection.commit()
+  except:
+    print("GET DB ERR!")
+    return []
   return cursor.fetchall()
 
 def newformat(fmtname):
@@ -62,7 +69,17 @@ def associate_pic(twimgurl, grafurl):
   ("{twimgid}", "{grafid}")""")
   return True
 
-def lookup_pic(rawimg):
+def lookup_pic(twimgurl):
+  find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.(jpe?g|png)$", twimgurl)
+  if find_hash != []:
+    twimgid = twimgurl.split(".")[-2].split("/")[-1]
+    fformat = twimgurl.split(".")[-1]
+    if fformat == "jpeg":
+      fformat = "jpg"
+    res = get(f"SELECT * FROM `{fformat}` WHERE twitter = {twimgid}")
+    if len(res) == 1:
+      print(res)
+      return "http://telegra.ph/file/" + res[0]["telegraph"]
   return ""
 
 ## DEPRECATED
