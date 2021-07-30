@@ -174,7 +174,7 @@ def userduty(update, ctx):
 def textilegraph(update, ctx):
   text = cutcmd(update.message.text)
   graf = publish.txtile(text)
-  update.message.reply_markdown_v2("`" + reg.escape(graf) + "`")
+  update.message.reply_markdown("`" + reg.escape(graf) + "`")
 
 def followings(update, ctx):
 	text = update.message.text
@@ -227,7 +227,7 @@ def file_keeper(update, ctx):
 	if sizmb >= 5:
 		msg.reply_text(
 		    r'_Your file exceeds the limit of *5MB*\._',
-		    parse_mode='MarkdownV2')
+		    parse_mode='Markdown')
 	else:
 		file = bot.getFile(update.message.document.file_id)
 		graphfile = graph.save_img(file.file_path)
@@ -240,14 +240,21 @@ def plain_msg(update, ctx):
 		regf = re.findall(r'com\/@?[a-zA-Z0-9_]+\/status', text)[0]
 		spl = regf.split(r'/')
 		user = spl[1]
+		if user.startswith("@"):
+			user = user[1:]
 		print('User in link: ' + user)
+		sended_msg = update.message.reply_markdown(text=
+			f"""Found user in link: @{user}
+		This process will be finished in several minutes, for we have supported archiving videos size less than 5 MB. Please wait patiently.""",
+		quote=True)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
 		#ctx.bot.send_message(
-		update.message.reply_markdown(
-		    quote=True,
-		    text="*" + "Get user from link: " + user + "*\n" + graf["url"])
-		print(graf)	
+		sended_msg.edit_text(
+		    text="Got user from link: " + user + "\n" + graf["url"],
+			parse_mode=telegram.ParseMode.HTML
+			)
+		#print(graf)
 	elif reg.is_user_profile_page(text):
 		arc_user(update, ctx)
 	elif reg.is_duty(text):
