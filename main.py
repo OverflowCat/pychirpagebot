@@ -10,6 +10,7 @@ import reg
 import db
 import json
 import publish
+import math
 
 from telegram.ext.defaults import Defaults
 from telegram import ParseMode
@@ -65,9 +66,20 @@ def start(update, context):
 
 def arc_favs(update, ctx):
 	text = update.message.text
-	text = cutcmd(text)
-	if text == "":
-		text = "2LMWX"
+	text = cutcmd(text).lower()
+	_t = text.lower()
+	if _t == "" or _t == "ofc" or _t == "i":
+		if update.effective_chat.id == (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
+			text = "2LMWX"
+		else:
+			update.message.reply("Please specify a username.")
+			return
+			# text = "elonmusk"
+	elif _t == "2lmwx":
+		if update.effective_chat.id != (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
+			return
+	_t = None
+
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
 	    text="Now fetching @" + text +
@@ -82,13 +94,25 @@ def arc_favs(update, ctx):
 
 # @telegram.ext.dispatcher.run_async
 def arc_user(update, ctx):
-	text = update.message.text
+	text = cutcmd(update.message.text)
 	if text == "":
-		text = "elonmusk"
+		update.message.reply("Please specify a username.")
+		return
 	else:
 		if "twitter.com" not in text:
-			text = cutcmd(text)
+			if re.match("^[0-9a-zA-Z_]+^", text):
+				# This is a valid username!
+				pass
+			elif re.match("^[0-9a-zA-Z_ ]+^", text):
+				# This is a valid "as" username!
+				pass
+			else:
+				update.message.reply('The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.')
 		else:
+			ctx.bot.send_message(
+	    chat_id=update.effective_chat.id,
+	    text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
+			return
 			text = text.split('/')[-1]
 	splited = text.split(" as ")
 	title = ""
@@ -139,10 +163,7 @@ def favs_users(update, ctx):
 	pass
 
 def dutymachine(update, ctx):
-	ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command.",
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+	update.message.reply_markdown("Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command.")
 	"""
 	text = update.message.text
 	text = cutcmd(text)
@@ -198,7 +219,6 @@ def followings(update, ctx):
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
 def voice_listener(update, ctx):
-	#print(update)
 	voi = update.message.voice
 	ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
@@ -207,10 +227,8 @@ def voice_listener(update, ctx):
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
 def photo_uploader(update, ctx):
-	#print(update)
 	msg = update.message
 	file = bot.getFile(update.message.photo[-1].file_id)
-	#print(file)
 	#reply = json.dumps(msg.photo, sort_keys=True, indent=4, separators=(',', ': '))
 	graphfile = graph.save_img(file.file_path)
 
@@ -245,7 +263,7 @@ def plain_msg(update, ctx):
 		print('User in link: ' + user)
 		sended_msg = update.message.reply_markdown(text=
 			f"""Found user in link: @{user}
-		This process will be finished in several minutes, for we have supported archiving videos size less than 5 MB. Please wait patiently.""",
+This process will be finished in several minutes, for we have supported archiving videos whose size is less than 5 MB. Please wait patiently.""",
 		quote=True)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
@@ -254,7 +272,7 @@ def plain_msg(update, ctx):
 		    text="Got user from link: " + user + "\n" + graf["url"],
 			parse_mode=telegram.ParseMode.HTML
 			)
-		#print(graf)
+		print(graf)
 	elif reg.is_user_profile_page(text):
 		arc_user(update, ctx)
 	elif reg.is_duty(text):

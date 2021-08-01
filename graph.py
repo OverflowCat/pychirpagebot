@@ -92,52 +92,7 @@ def save_imgs(imgurls):
   print("Saving " + ", ".join(imgurls))
   return [save_img(x) for x in imgurls]
 
-def old_save_imgs(imgurls):
-  print("Saving " + ", ".join(imgurls))
-  graphPicUrls = []
-  
-  for pic in imgurls:
-    global fformat
-    find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.jpe?g$", pic)
-    filename = 'temp_' + id_generator(5) + '.jpg'
-    if "video.twimg" in pic:
-      filename = 'temp_' + id_generator(5) + '.mp4'
-      fformat = 'mp4'
-      filename = pic.split('/')[-1].split("?")[0]
-    if pic.endswith('.png'):
-      filename = pic.split(r"/")[-1]
-      fformat = "png"
-    if find_hash != []:
-      if use_png:
-        pic = pic.replace(".jpg",".png", 1)
-        fformat = "png"
-      else:
-        fformat = "jpg"
-      # +"?format=jpg&name=orig"
-      filename = find_hash[0].replace(r'/', "").replace(".jpg",".png", 1)
-    print(r'/' + filename)
-    filename = temp_dir + "/" + filename
-    if os.path.exists(filename):
-      print("Duplicate " + pic)
-    request = requests.get(pic.replace(r"http://", r"https://"), stream=True)
-    if request.status_code == 200:
-      with open(filename, 'wb') as image:
-        for chunk in request:
-          image.write(chunk)
-    graphfileurl = upload_image(filename)
-    graphPicUrls.append(graphfileurl)
-    #os.remove(filename)
-    fsize = os.path.getsize(filename)
-    db.logimg(pic, graphfileurl, "CALCULATED_HASH", "UNKNOWN", fformat, fsize)
-  return graphPicUrls
-  # return "https://telegra.ph/file/256c7e4f9da49eef2f129.jpg"
-
-def old_save_img(imgurl):
-  res = save_imgs([imgurl])
-  if len(res) == 1:
-    return res[0]
-  else:
-    return "err"
+# DEPRECATED OLD CODE HAS BEEN REMOVED
 
 tco_rgx = re.compile(r"(https:\/\/t\.co)/([a-zA-Z0-9]{10})")
 def tco(texto):
@@ -215,8 +170,7 @@ def dealWithTweets(tweets, **pa):
     if counter == 1:
       if not pa["username"]: # 使用了 /user 故不需要每条推都显示作者用户名，因为都是一样的
         bioInfo.append(userBio(t.user))
-      else:
-        # 不是用户 bio 页，故需要收集用户
+      else: # 不是用户 bio 页，故需要收集用户
         user_collect.append(t.user.screen_name)
     htm = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
@@ -260,36 +214,28 @@ def dealWithTweets(tweets, **pa):
       graphimgurls = save_imgs(imgurls)	
       graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]	
       htm.append("".join(graphimgshtml))
-    #print(t.entities)
     
+    # Save videos
     global current_tweet
     current_tweet = t._json
     if hasattr(t, "extended_entities"):
       e = t.extended_entities
-      # print(json.dumps(e, sort_keys=True, indent=2, separators=(',', ': ')))
       v = e["media"][0]
       if v["type"] == "video":
         variants = v["video_info"]["variants"]
-        for vari in variants:
-          print(vari)
         variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
         sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
-        print(json.dumps(sorted_variants, indent=2))
+        # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
         vid_url = save_img(sorted_variants[0]["url"])
         print("vid_url: " + vid_url)
         htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
-        #(f'<video src="{vid_url}">')
    
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append("".join(htm))
-  ooo = "".join(output)
-  ooo = "".join(bioInfo) + ooo
-  #print(ooo)
-  ooo = ooo.replace('\n', '<br>')
   db.logtweets([t._json for t in tweets])
   # 放在 for t in tweets:... 前就不行
-  return ooo
+  return ("".join(bioInfo) + "".join(output)).replace('\n', '<br>')
 
 def pagesTweets(tweets, **pa):
   counter = 0
@@ -341,6 +287,6 @@ def userBio(userobj):
   ooo = "".join(ooo)
   print(ooo)
   return ooo
-  
+
 def p(text, title="Logs"):
   return graph.post(title=title, author='Chirpage', text=text)
