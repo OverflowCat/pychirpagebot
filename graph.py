@@ -8,6 +8,8 @@ import db
 import pagination
 import json
 import select
+import ffm
+from typing import Optional
 from tweets import *
 
 current_tweet = ""
@@ -16,7 +18,6 @@ use_png = False
 ### debug ###
 # ltw: last fetched tweets
 
-
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
 from datetime import datetime
@@ -24,12 +25,8 @@ from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
 graphacc = os.environ["G1"]
 graph = TelegraphPoster(access_token=graphacc)
-T1 = os.environ["T1"]
-T2 = os.environ["T2"]
-T3 = os.environ["T3"]
-T4 = os.environ["T4"]
-auth = tweepy.OAuthHandler(T1, T2)
-auth.set_access_token(T3, T4)
+auth = tweepy.OAuthHandler(os.environ["T1"], os.environ["T2"])
+auth.set_access_token(os.environ["T3"], os.environ["T4"])
 api = tweepy.API(auth)
 temp_dir = 'temp'
 if not os.path.exists(temp_dir):
@@ -41,7 +38,7 @@ def getTweepy():
 def getApi():
   return api
 
-def save_img(url):
+def save_img(url: str, save2disk : Optional[bool] = False) -> str:
   raw_url = url
   res = db.lookup_pic(raw_url)
   if res != "":
@@ -79,6 +76,8 @@ def save_img(url):
   else:
     print(f"Download {url} failed.")
     return ""
+  if save2disk:
+    return filename # actually path
   try:
     graphfileurl = upload_image(filename)
   except:
@@ -91,6 +90,20 @@ def save_img(url):
 def save_imgs(imgurls):
   print("Saving " + ", ".join(imgurls))
   return [save_img(x) for x in imgurls]
+
+def save_vid(url, removeFailed=False):
+  return [upload(x) for x in ffm.split(save_img(url, True)) if not removeFailed or x != ""]
+  # 当not和and及or在一起运算时，优先级为是not>and>or，t and f or not t = t and f or f = f or f = f
+
+def upload(path: str) -> str:
+  try:
+    print("现正在上传 " + path)
+    graphfileurl = upload_image(path)
+  except:
+    print(f"Upload {path} failed.")
+    return ""
+  else:
+    return graphfileurl
 
 # DEPRECATED OLD CODE HAS BEEN REMOVED
 
@@ -143,13 +156,13 @@ def fetchUser(user="elonmusk", title=""):
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
-def fetchTimeline(user=""):
+def fetchTimeline(user: str =""):
   tweets = api.home_timeline(tweet_mode="extended")
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(ooo))
   return graf
 
-def search(query, title='text'):
+def search(query, title: str = 'text'):
   print('Searching "' + query + '"')
   search_results = api.search(q=query, count=65, tweet_mode='extended')
   output = dealWithTweets(search_results, username=True)
@@ -226,9 +239,12 @@ def dealWithTweets(tweets, **pa):
         variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
         sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
         # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
-        vid_url = save_img(sorted_variants[0]["url"])
-        print("vid_url: " + vid_url)
-        htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
+        vid_urls = save_vid(sorted_variants[0]["url"])
+        #vid_url = save_img(sorted_variants[0]["url"])
+        #print("vid_url: " + vid_url)
+        print(f"vid_rls: {', '.join(vid_urls)}")
+        htm.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>' for vid_url in vid_urls]))
+        #htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
    
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")

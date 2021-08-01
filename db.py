@@ -21,6 +21,7 @@ def exe(operation):
     print("DB ERR!")
 
 def get(operation, needcommit=False):
+  return []
 # Connect to the database
   try:
     connection = pymysql.connect(host=os.environ['PYCMYSQLHOST'],
@@ -33,7 +34,7 @@ def get(operation, needcommit=False):
     if needcommit:
       connection.commit()
   except:
-    print("GET DB ERR!")
+    #print("GET DB ERR!")
     return []
   return cursor.fetchall()
 

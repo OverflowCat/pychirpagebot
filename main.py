@@ -1,23 +1,27 @@
+from telegram.ext import MessageHandler, CommandHandler, Filters
+from telegram.ext.dispatcher import run_async
+import logging
+from telegram.ext import Updater
+import requests
+from datetime import datetime
+from telegram import ParseMode
+from telegram.ext.defaults import Defaults
+import math
+import publish
+import json
+import db
+import reg
+import duty
+import os
+import re
+import graph
+import telegram
 from dotenv import load_dotenv
 load_dotenv()  # graph.py requires env
 
-import telegram
-import graph
-import re
-import os
-import duty
-import reg
-import db
-import json
-import publish
-import math
 
-from telegram.ext.defaults import Defaults
-from telegram import ParseMode
-from datetime import datetime
 print("App started")
 
-import requests
 
 def log(_path, _user, _type, _query):
 	r = requests.post(
@@ -33,7 +37,9 @@ def log(_path, _user, _type, _query):
 	    })
 	return r.json()
 
+
 cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
+
 
 def cutcmd(msg_txt):
 	seps = msg_txt.split(" ")
@@ -41,28 +47,27 @@ def cutcmd(msg_txt):
 	return ' '.join(seps)
 	#return re.sub(cmdre, "", msg_txt)
 
+
 myfllwings = []
 
 defaults = Defaults(parse_mode=ParseMode.HTML, run_async=True)
 bot = telegram.Bot(token=os.environ["chirpage"], defaults=defaults)
-from telegram.ext import Updater
 updater = Updater(os.environ["chirpage"], use_context=True)
 dispatcher = updater.dispatcher
 
-import logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO)
-from telegram.ext.dispatcher import run_async
+
 
 def start(update, context):
 	context.bot.send_message(
 	    chat_id=update.effective_chat.id,
-	    text=
-	    """Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
+	    text="""Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
 		You can also forward voice messages to me to get the file sizes of them.
 		Duty Machine service is temporarily down due to GitHub's term of service.""",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 def arc_favs(update, ctx):
 	text = update.message.text
@@ -72,7 +77,7 @@ def arc_favs(update, ctx):
 		if update.effective_chat.id == (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
 			text = "2LMWX"
 		else:
-			update.message.reply("Please specify a username.")
+			update.message.reply_markdown("Please specify a username.")
 			return
 			# text = "elonmusk"
 	elif _t == "2lmwx":
@@ -93,27 +98,30 @@ def arc_favs(update, ctx):
 	print(graf)
 
 # @telegram.ext.dispatcher.run_async
+
+
 def arc_user(update, ctx):
 	text = cutcmd(update.message.text)
 	if text == "":
-		update.message.reply("Please specify a username.")
+		update.message.reply_markdown("Please specify a username.")
 		return
 	else:
 		if "twitter.com" not in text:
-			if re.match("^[0-9a-zA-Z_]+^", text):
+			if re.match("^[0-9a-zA-Z_]+$", text):
 				# This is a valid username!
 				pass
-			elif re.match("^[0-9a-zA-Z_ ]+^", text):
+			elif re.match("^[0-9a-zA-Z_ ]$", text):
 				# This is a valid "as" username!
 				pass
 			else:
-				update.message.reply('The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.')
+				update.message.reply_markdown(
+					'The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.')
 		else:
-			ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
-			return
-			text = text.split('/')[-1]
+		ctx.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
+		return
+		text = text.split('/')[-1]
 	splited = text.split(" as ")
 	title = ""
 	as_what = ""
@@ -122,8 +130,7 @@ def arc_user(update, ctx):
 		as_what = " as " + title
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
-	    text=
-	    f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+	    text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchUser(text, title=title)
 	log(graf, text, 'user', text + ':timeline')
@@ -132,9 +139,10 @@ def arc_user(update, ctx):
 	    parse_mode=telegram.ParseMode.HTML)
 	print(graf)
 
+
 def arc_timeline(update, ctx):
 	sended_msg = ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,text="Now fetching timeline tweets…",
+	    chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 	graf = graph.fetchTimeline()
 	log(graf, "tl", 'timeline', "2Lmwx" + ':favs')
@@ -162,8 +170,11 @@ def single_tweet(update, ctx):
 def favs_users(update, ctx):
 	pass
 
+
 def dutymachine(update, ctx):
-	update.message.reply_markdown("Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command.")
+	update.message.reply_markdown(
+		"Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command.")
+
 	"""
 	text = update.message.text
 	text = cutcmd(text)
@@ -178,8 +189,10 @@ def dutymachine(update, ctx):
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 	"""
 
+
 def ping(update, ctx):
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
+
 
 def userduty(update, ctx):
 	text = update.message.text
@@ -192,20 +205,20 @@ def userduty(update, ctx):
 	    text="`" + text + "`\n" + resp,
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
+
 def textilegraph(update, ctx):
-  text = cutcmd(update.message.text)
-  graf = publish.txtile(text)
+  graf = publish.txtile(cutcmd(update.message.text))
   update.message.reply_markdown("`" + reg.escape(graf) + "`")
 
+
 def followings(update, ctx):
-	text = update.message.text
-	text = cutcmd(text)
+	text = cutcmd(update.message.text)
 	fllwings = []
 	tweepy = graph.getTweepy()
 	api = graph.getApi()
 	try:
 		for user in tweepy.Cursor(
-		    api.friends, screen_name="2Lmwx", count=4999).items():
+                api.friends, screen_name="2Lmwx", count=4999).items():
 			print(user.screen_name)
 			fllwings.append(user.screen_name)
 	except:
@@ -218,23 +231,24 @@ def followings(update, ctx):
 	print(resu)
 	ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
+
 def voice_listener(update, ctx):
 	voi = update.message.voice
 	ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
-	    text=
-	    f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
+	    text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
 	    parse_mode=telegram.ParseMode.MARKDOWN)
+
 
 def photo_uploader(update, ctx):
 	msg = update.message
 	file = bot.getFile(update.message.photo[-1].file_id)
-	#reply = json.dumps(msg.photo, sort_keys=True, indent=4, separators=(',', ': '))
 	graphfile = graph.save_img(file.file_path)
 
 	bot.send_message(chat_id=update.effective_chat.id, text=graphfile)
 	# DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
 	# According to the documentation, link may expire after 1 h.
+
 
 def file_keeper(update, ctx):
 	# print(update.message)
@@ -251,6 +265,7 @@ def file_keeper(update, ctx):
 		graphfile = graph.save_img(file.file_path)
 		msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
 
+
 def plain_msg(update, ctx):
 	text = update.message.text
 	print(text)
@@ -261,17 +276,15 @@ def plain_msg(update, ctx):
 		if user.startswith("@"):
 			user = user[1:]
 		print('User in link: ' + user)
-		sended_msg = update.message.reply_markdown(text=
-			f"""Found user in link: @{user}
+		sended_msg = update.message.reply_markdown(text=f"""Found user in link: @{user}
 This process will be finished in several minutes, for we have supported archiving videos whose size is less than 5 MB. Please wait patiently.""",
-		quote=True)
+                                             quote=True)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
-		#ctx.bot.send_message(
 		sended_msg.edit_text(
 		    text="Got user from link: " + user + "\n" + graf["url"],
-			parse_mode=telegram.ParseMode.HTML
-			)
+                 			parse_mode=telegram.ParseMode.HTML
+                )
 		print(graf)
 	elif reg.is_user_profile_page(text):
 		arc_user(update, ctx)
@@ -286,19 +299,22 @@ This process will be finished in several minutes, for we have supported archivin
 		    parse_mode=telegram.ParseMode.MARKDOWN)
 		"""
 
-from telegram.ext import MessageHandler, CommandHandler, Filters
+
 start_handler = CommandHandler('start', start, run_async=True)
 favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
 user_handler = CommandHandler(['user', 'twitter'], arc_user, run_async=True)
-timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline, run_async=True)
+timeline_handler = CommandHandler(
+	["tl", "timeline"], arc_timeline, run_async=True)
 # command: Union[str, List[str], Tuple[str, ...]]
 search_handler = CommandHandler('search', search_tweets, run_async=True)
-duty_handler = CommandHandler(['duty', 'dm', "dutymachine"], dutymachine, run_async=True)
+duty_handler = CommandHandler(
+	['duty', 'dm', "dutymachine"], dutymachine, run_async=True)
 userduty_handler = CommandHandler('userduty', userduty, run_async=True)
 followings_handler = CommandHandler("followings", followings, run_async=True)
 ping_handler = CommandHandler('ping', ping)
 textile_handler = CommandHandler('textile', textilegraph)
-message_handler = MessageHandler(Filters.text & (~Filters.command), plain_msg, run_async=True)
+message_handler = MessageHandler(Filters.text & (
+	~Filters.command), plain_msg, run_async=True)
 file_handler = MessageHandler(
     Filters.document.image & Filters.chat_type.private, file_keeper, run_async=True)
 voice_handler = MessageHandler(Filters.voice & Filters.chat_type.private,
