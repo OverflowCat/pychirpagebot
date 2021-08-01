@@ -18,7 +18,6 @@ schedule = "^0.6.0"
 textile = "^4.0.1"
 msgpack = "^1.0.2"
 tinydb = "^4.3.0"
-Jinja2 = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
 

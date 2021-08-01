@@ -93,7 +93,7 @@ def save_imgs(imgurls):
 
 def save_vid(url, removeFailed=False):
   return [upload(x) for x in ffm.split(save_img(url, True)) if not removeFailed or x != ""]
-  # 当not和and及or在一起运算时，优先级为是not>and>or，t and f or not t = t and f or f = f or f = f
+  # 当 not 和 and 及 or 在一起运算时，优先级为 not > and > or，即 t and f or not t == t and f or f == f or f == f
 
 def upload(path: str) -> str:
   try:
@@ -239,11 +239,10 @@ def dealWithTweets(tweets, **pa):
         variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
         sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
         # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
-        vid_urls = save_vid(sorted_variants[0]["url"])
-        #vid_url = save_img(sorted_variants[0]["url"])
-        #print("vid_url: " + vid_url)
+        vid_urls = save_vid(sorted_variants[0]["url"]) # <- save_img(…)
         print(f"vid_rls: {', '.join(vid_urls)}")
         htm.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>' for vid_url in vid_urls]))
+        # TODO: Move figure to its preview image
         #htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
    
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
@@ -276,18 +275,19 @@ def userBio(userobj):
   if u.verified:
     htm.append(" ✔️")
 
-  if False: # hasattr(u, "profile_banner_url"):
+  if hasattr(u, "profile_banner_url"):
     print("Banner URL: " + u.profile_banner_url)
+    # Banner URL be like: https://pbs.twimg.com/profile_banners/{userid}/1234567890
+    # TODO: change banner pic name
     saved = save_img(u.profile_banner_url)
     if saved != "err":
-      htm.append('<img src="' + saved + ">")
+      htm.insert(0, f'<img src="{saved}">')
     else:
       print("Saving Banner ERR")
-
   htm.append("<aside>" + u.description + "</aside>")
+
   if False:#hasattr(u, "url"):
-    print("has attr! ")
-    print(u.url)
+    print("has attr!", u.url)
     url = u.url
     htm.append('🔗 <a href="' + url + '">' + url + '</a>')
   if not u.default_profile_image:

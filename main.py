@@ -14,11 +14,10 @@ import reg
 import duty
 import os
 import re
-import graph
 import telegram
 from dotenv import load_dotenv
 load_dotenv()  # graph.py requires env
-
+import graph
 
 print("App started")
 
@@ -117,7 +116,7 @@ def arc_user(update, ctx):
 				update.message.reply_markdown(
 					'The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.')
 		else:
-		ctx.bot.send_message(
+			ctx.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
 		return
@@ -130,7 +129,7 @@ def arc_user(update, ctx):
 		as_what = " as " + title
 	sended_msg = ctx.bot.send_message(
 	    chat_id=update.effective_chat.id,
-	    text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+	    text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
 	    parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchUser(text, title=title)
 	log(graf, text, 'user', text + ':timeline')
@@ -276,8 +275,8 @@ def plain_msg(update, ctx):
 		if user.startswith("@"):
 			user = user[1:]
 		print('User in link: ' + user)
-		sended_msg = update.message.reply_markdown(text=f"""Found user in link: @{user}
-This process will be finished in several minutes, for we have supported archiving videos whose size is less than 5 MB. Please wait patiently.""",
+		sended_msg = update.message.reply_text(text=f"""Found user in link: @{user}
+This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
                                              quote=True)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
