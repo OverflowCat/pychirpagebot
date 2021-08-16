@@ -119,8 +119,8 @@ def arc_user(update, ctx):
 			ctx.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
-		return
-		text = text.split('/')[-1]
+			return
+	text = text.split('/')[-1]
 	splited = text.split(" as ")
 	title = ""
 	as_what = ""
