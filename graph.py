@@ -1,5 +1,6 @@
 import re
 import os
+import storage
 import tweepy
 import requests
 import string
@@ -65,6 +66,7 @@ def save_img(url: str, save2disk : Optional[bool] = False) -> str:
     # +"?format=jpg&name=orig"
     filename = find_hash[0].replace(r'/', "").replace(".jpg",".png", 1)
   print(r'/' + filename)
+  _filename = filename
   filename = temp_dir + "/" + filename
   if os.path.exists(filename):
     print("Duplicate " + url)
@@ -84,6 +86,7 @@ def save_img(url: str, save2disk : Optional[bool] = False) -> str:
     print(f"Upload {filename} failed.")
     return ""
   else:
+    storage.mv(filename, "/pan/pychirpagebot/saved/" + _filename, True)
     db.associate_pic(raw_url, graphfileurl)
     return graphfileurl
 
