@@ -8,7 +8,7 @@ import pagination
 import json
 import select
 import ffm
-from typing import Optional
+from typing import Optional, Dict, List
 from tweets import *
 
 current_tweet = ""
@@ -84,7 +84,7 @@ def save_img(url: str, save2disk : Optional[bool] = False) -> str:
     db.associate_pic(raw_url, graphfileurl)
     return graphfileurl
 
-def save_imgs(imgurls):
+def save_imgs(imgurls: List[str]) -> List[str]:
   print("Saving " + ", ".join(imgurls))
   return [save_img(x) for x in imgurls]
 
@@ -131,29 +131,34 @@ def fetch_tweet(tweet, title=''):
   if title == '':
     title = "tweet"
 
-def fetchFavs(user="elonmusk", title=''):
+
+def fetchFavs(user: str = "elonmusk", title: str = ''):
   if user == "i":
     user = "twitter"
   if title == "":
     title = user + "-favs-" + id_generator(4)
   print("Fetching @" + user + "'s favorites")
-  tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
+  tweets = tweepy.Cursor(api.favorites, screen_name=user,
+                         tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title=title, author='Twitter Likes', text="".join(ooo))
   return graf
 
-def fetchUser(user="elonmusk", title=""):
+
+def fetchUser(user: str = "elonmusk", title: str = ""):
   if user == "ofc":
     user = "elonmusk"
   if title == "":
     title = "@" + user
   print("Fetching @" + user)
-  tweets = tweepy.Cursor(api.user_timeline, screen_name=user, tweet_mode="extended").items(60)
+  tweets = tweepy.Cursor(api.user_timeline, screen_name=user,
+                         tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
-def fetchTimeline(user: str =""):
+
+def fetchTimeline(user: str = ""):
   tweets = api.home_timeline(tweet_mode="extended")
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(ooo))
@@ -262,7 +267,8 @@ def pagesTweets(tweets, **pa):
       outputTweets.append(t)
   return graves
 
-def userBio(userobj):
+
+def userBio(userobj) -> str:
   ooo = []
   u = userobj
   htm = []
@@ -301,5 +307,6 @@ def userBio(userobj):
   print(ooo)
   return ooo
 
-def p(text, title="Logs"):
+
+def p(text: str, title: str = "Logs"):
   return graph.post(title=title, author='Chirpage', text=text)

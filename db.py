@@ -49,7 +49,8 @@ def newformat(fmtname):
 def save_tweet(json_data):
   return True
 
-def associate_pic(twimgurl, grafurl):
+
+def associate_pic(twimgurl: str, grafurl: str) -> bool:
   find_hash = re.findall(r"\/[a-zA-Z0-9_-]+\.(jpe?g|png)$", twimgurl)
   if find_hash != []:
     twimgid = twimgurl.split(".")[-2].split("/")[-1]
@@ -57,7 +58,7 @@ def associate_pic(twimgurl, grafurl):
     return False
   grafid = grafurl.split("/")[-1]
   # if "." in grafid:
-  grafid = grafid.split(".")[0] # "aaa".split(".") == ["aaa"]
+  grafid = grafid.split(".")[0]  # "aaa".split(".") == ["aaa"]
   print("DB: ", twimgid, grafid)
   _t = twimgurl.split(".")[-1]
   if "jpg" in _t or "jpeg" in _t:

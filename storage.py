@@ -29,3 +29,8 @@ def mkdir(path:str) -> bool:
   return False
 
 mkdir(TEMP_DIR)
+
+def rm(path:str) -> bool:
+  # TODO
+  shutil.rmtree(path, True)
+  return True
