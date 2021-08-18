@@ -4,6 +4,8 @@ import threading
 from typing import Optional
 
 _debug = True
+TEMP_DIR = 'temp'
+
 
 def mv(src:str, dst:str, delay:Optional[bool]=False, sec:Optional[int]=6) -> bool:
   if delay:
@@ -18,3 +20,12 @@ def mv(src:str, dst:str, delay:Optional[bool]=False, sec:Optional[int]=6) -> boo
     os.remove(src)
     if _debug:
       print("Have moved " + src)
+    return True
+
+def mkdir(path:str) -> bool:
+  if not os.path.exists(path):
+    os.makedirs(path)
+    return True
+  return False
+
+mkdir(TEMP_DIR)

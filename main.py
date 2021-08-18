@@ -18,6 +18,7 @@ import telegram
 from dotenv import load_dotenv
 load_dotenv()  # graph.py requires env
 import graph
+import storage
 
 print("App started")
 
@@ -267,7 +268,6 @@ def file_keeper(update, ctx):
 
 def plain_msg(update, ctx):
 	text = update.message.text
-	print(text)
 	if reg.is_status(text):
 		regf = re.findall(r'com\/@?[a-zA-Z0-9_]+\/status', text)[0]
 		spl = regf.split(r'/')
@@ -298,6 +298,23 @@ This process will be finished in several minutes, for we have supported archivin
 		    parse_mode=telegram.ParseMode.MARKDOWN)
 		"""
 
+def download_video(update, ctx):
+    sended_message = update.message.reply_text(
+        "Now downloading video…", parse_mode='MarkdownV2')
+    url = cutcmd(update.message.text).lower()
+    storage.mkdir("/pan/annie/temp/")
+    fid = reg.id_generator(4)
+    storage.mkdir(f"/pan/annie/temp/{fid}/")
+    command = f'/pan/annie/annie -o "/pan/annie/temp/{fid}/" "{url}"'
+    print(command)
+    os.system(command)
+    # f'/pan/annie/annie -o "/pan/annie/temp/{fid}/" "{url}"'
+
+    files = os.listdir(f"/pan/annie/temp/{fid}/")
+    for f in files:
+        sended_message.edit_text(f"Location: /pan/annie/temp/{fid}/{f}")
+        return
+    # TODO: 错误处理
 
 start_handler = CommandHandler('start', start, run_async=True)
 favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
@@ -320,6 +337,8 @@ voice_handler = MessageHandler(Filters.voice & Filters.chat_type.private,
                                voice_listener, run_async=True)
 photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
                                photo_uploader, run_async=True)
+video_handler = CommandHandler(["vid", "video", "annie"], download_video, run_async=False, allow_edited=False)
+
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
@@ -334,6 +353,7 @@ dispatcher.add_handler(userduty_handler)
 dispatcher.add_handler(voice_handler)
 dispatcher.add_handler(photo_handler)
 dispatcher.add_handler(file_handler)
+dispatcher.add_handler(video_handler)
 
 # 拉清单
 updater.start_polling()

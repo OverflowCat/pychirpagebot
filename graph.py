@@ -3,8 +3,6 @@ import os
 import storage
 import tweepy
 import requests
-import string
-import random
 import db
 import pagination
 import json
@@ -19,8 +17,7 @@ use_png = False
 ### debug ###
 # ltw: last fetched tweets
 
-def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-  return ''.join(random.choice(chars) for _ in range(size))
+from reg import id_generator
 from datetime import datetime
 from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
@@ -29,9 +26,6 @@ graph = TelegraphPoster(access_token=graphacc)
 auth = tweepy.OAuthHandler(os.environ["T1"], os.environ["T2"])
 auth.set_access_token(os.environ["T3"], os.environ["T4"])
 api = tweepy.API(auth)
-temp_dir = 'temp'
-if not os.path.exists(temp_dir):
-    os.makedirs(temp_dir)
 
 def getTweepy():
   return tweepy
@@ -67,7 +61,7 @@ def save_img(url: str, save2disk : Optional[bool] = False) -> str:
     filename = find_hash[0].replace(r'/', "").replace(".jpg",".png", 1)
   print(r'/' + filename)
   _filename = filename
-  filename = temp_dir + "/" + filename
+  filename = storage.TEMP_DIR + "/" + filename
   if os.path.exists(filename):
     print("Duplicate " + url)
   request = requests.get(url.replace(r"http://", r"https://"), stream=True)
@@ -141,7 +135,7 @@ def fetchFavs(user="elonmusk", title=''):
   if user == "i":
     user = "twitter"
   if title == "":
-    title = user + "-favs-" + id_generator(2)
+    title = user + "-favs-" + id_generator(4)
   print("Fetching @" + user + "'s favorites")
   tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=True)

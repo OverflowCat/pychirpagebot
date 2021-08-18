@@ -1,5 +1,8 @@
 import re
 
+import string
+import random
+
 url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?', flags=re.IGNORECASE)
 def is_status(url):
   return url_patt.match(url)
@@ -36,3 +39,13 @@ def escape(markdown_v2_text):
   for char in ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']:
     escaped = escaped.replace(char, "\\" + char)
   return escaped
+
+annies = ["bilibili.com", "youtube.com", "douyin.com", "twitter.com", "vimeo.com", "youku.com"]
+def is_vid(url):
+  for domain in annies:
+    if domain in url:
+      return True
+  return False
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+  return ''.join(random.choice(chars) for _ in range(size))
