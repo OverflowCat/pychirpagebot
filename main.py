@@ -320,7 +320,11 @@ def download_video(update, ctx):
 		return
 	# TODO: 错误处理
 
+def clear():
+	storage.clear_temp()
+
 start_handler = CommandHandler('start', start, run_async=True)
+clear_handler = CommandHandler('clear', clear, run_async=True)
 favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
 user_handler = CommandHandler(['user', 'twitter'], arc_user, run_async=True)
 timeline_handler = CommandHandler(
@@ -345,6 +349,7 @@ video_handler = CommandHandler(["vid", "video", "annie"], download_video,
                                filters=~Filters.update.edited_message,  run_async=False)
 
 dispatcher.add_handler(start_handler)
+dispatcher.add_handler(clear_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)

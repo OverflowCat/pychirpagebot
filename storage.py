@@ -34,3 +34,8 @@ def rm(path:str) -> bool:
   # TODO
   shutil.rmtree(path, True)
   return True
+
+def clear_temp() -> bool:
+  rm(TEMP_DIR)
+  mkdir(TEMP_DIR)
+  return True
