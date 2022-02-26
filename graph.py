@@ -8,7 +8,7 @@ import pagination
 import json
 import select
 import ffm
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Union
 from tweets import *
 
 current_tweet = ""
@@ -155,6 +155,18 @@ def fetchUser(user: str = "elonmusk", title: str = ""):
                          tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=False)
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
+  return graf
+
+
+def fetchList(list_id: str, title: str = ''):
+  # tweets = tweepy.Cursor(api.list_timeline, list_id=1496265153821745158,
+  #                       tweet_mode="extended").items(60)
+  print(f"Fetching list {list_id}…")
+  tweets = tweepy.Cursor(api.list_timeline, list_id=list_id, tweet_mode="extended").items(60)
+  #tweepy.Client.get_list_tweets(list_id, max_results=60)
+  print(tweets)
+  ooo = dealWithTweets(tweets, username=True)
+  graf = graph.post(title=list_id, author='Twitter', author_url=f"https://twitter.com/i/lists/{list_id}", text=" "+"".join(ooo))
   return graf
 
 

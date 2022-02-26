@@ -3,9 +3,9 @@ import re
 import string
 import random
 
-url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?', flags=re.IGNORECASE)
+status_url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?', flags=re.IGNORECASE)
 def is_status(url):
-  return url_patt.match(url)
+  return status_url_patt.match(url)
 
 profile_url_patt = re.compile(r'(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/?', flags=re.IGNORECASE)
 def is_user_profile_page(url):
@@ -49,3 +49,6 @@ def is_vid(url):
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
+
+def is_list(url):
+  return url.startswith("https://twitter.com/i/lists/")

@@ -7,17 +7,19 @@ authors = ["Your Name <you@example.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 html-telegraph-poster = "^0.2.0"
-tweepy = "^3.9.0"
+
 gspread = "^3.6.0"
 python-dotenv = "^0.14.0"
-python-telegram-bot = "^13.1"
+python-telegram-bot = "^13.11"
 Pillow = "^9.0.0"
 python-bidi = "^0.4.2"
 pysos = "^1.2.1"
 schedule = "^0.6.0"
-textile = "^4.0.1"
+tinydb = "^4.7.0"
 msgpack = "^1.0.2"
-tinydb = "^4.3.0"
+PyMySQL = "^1.0.2"
+tweepy = "^4.6.0"
+textile = "^4.0.2"
 
 [tool.poetry.dev-dependencies]
 

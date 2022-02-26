@@ -8,6 +8,7 @@ TEMP_DIR = 'temp'
 
 
 def mv(src:str, dst:str, delay:Optional[bool]=False, sec:Optional[int]=6) -> bool:
+  """
   if delay:
     if _debug:
       print("Now delaying " + src)
@@ -21,6 +22,8 @@ def mv(src:str, dst:str, delay:Optional[bool]=False, sec:Optional[int]=6) -> boo
     if _debug:
       print("Have moved " + src)
     return True
+  """
+  return True
 
 def mkdir(path:str) -> bool:
   if not os.path.exists(path):

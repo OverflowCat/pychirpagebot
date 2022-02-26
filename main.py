@@ -44,7 +44,7 @@ cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
 def cutcmd(msg_txt):
 	seps = msg_txt.split(" ")
 	seps.pop(0)
-	return ' '.join(seps)
+	return ' '.join(seps).strip()
 	#return re.sub(cmdre, "", msg_txt)
 
 
@@ -148,6 +148,39 @@ def arc_timeline(update, ctx):
 	log(graf, "tl", 'timeline', "2Lmwx" + ':favs')
 	sended_msg.edit_text(
 	    text="*" + " Timeline tweets" + "*\n" + graf["url"],
+	    parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+list_reg = re.compile(r"^(https?://)?([a-zA-Z.]+\.)?twitter\.com/i/lists/[0-9]+")
+def arc_list(update, ctx):
+	list_id = "1496265153821745158"
+	text = update.message.text
+	print(1, text)
+	if text.startswith("/"):
+		text = cutcmd(text)
+# if text.isdigit():
+		list_id = text
+#		else:
+#			update.message.reply_markdown("Please specify a list ID.")
+#			return
+	else:
+		res = list_reg.search(text)
+		if res is None:
+			update.message.reply_markdown("Please specify a list ID.")
+			return
+		else:
+			clean_link = res.group(0)
+			print("clean_link:", clean_link)
+			list_id = clean_link.split('/')[-1].strip()
+			print("list_id:", list_id)
+	sended_msg = ctx.bot.send_message(
+	    chat_id=update.effective_chat.id,
+	    text=f"Now fetching list {list_id}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
+	    parse_mode=telegram.ParseMode.HTML)
+	graf = graph.fetchList(list_id)
+
+	sended_msg.edit_text(
+	    text="*" + " Archived tweets" + "*\n" + graf["url"],
 	    parse_mode=telegram.ParseMode.MARKDOWN)
 
 
@@ -285,6 +318,8 @@ This process will be finished in several minutes, for we have supported archivin
                  			parse_mode=telegram.ParseMode.HTML
                 )
 		print(graf)
+	elif reg.is_list(text):
+		arc_list(update, ctx)
 	elif reg.is_user_profile_page(text):
 		arc_user(update, ctx)
 	elif reg.is_duty(text):
@@ -327,6 +362,7 @@ start_handler = CommandHandler('start', start, run_async=True)
 clear_handler = CommandHandler('clear', clear, run_async=True)
 favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
 user_handler = CommandHandler(['user', 'twitter'], arc_user, run_async=True)
+list_handler = CommandHandler(['list', 'li'], arc_list, run_async=True)
 timeline_handler = CommandHandler(
 	["tl", "timeline"], arc_timeline, run_async=True)
 # command: Union[str, List[str], Tuple[str, ...]]
@@ -353,6 +389,7 @@ dispatcher.add_handler(clear_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
+dispatcher.add_handler(list_handler)
 dispatcher.add_handler(timeline_handler)
 # dispatcher.add_handler(search_handler)
 dispatcher.add_handler(duty_handler)
