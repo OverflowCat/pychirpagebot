@@ -17,24 +17,24 @@ import re
 import telegram
 from dotenv import load_dotenv
 load_dotenv()  # graph.py requires env
-import graph
 import storage
+import graph
 
 print("App started")
 
 
 def log(_path, _user, _type, _query):
 	r = requests.post(
-	    os.environ["CHSHDB"],
-	    json={
-	        "data": {
-	            "path": _path,
-	            "user": _user,
-	            "type": _type,
-	            "query": _query,
-	            "time": int(datetime.utcnow().timestamp())
-	        }
-	    })
+		os.environ["CHSHDB"],
+		json={
+			"data": {
+				"path": _path,
+				"user": _user,
+				"type": _type,
+				"query": _query,
+				"time": int(datetime.utcnow().timestamp())
+			}
+		})
 	return r.json()
 
 
@@ -45,7 +45,7 @@ def cutcmd(msg_txt):
 	seps = msg_txt.split(" ")
 	seps.pop(0)
 	return ' '.join(seps).strip()
-	#return re.sub(cmdre, "", msg_txt)
+	# return re.sub(cmdre, "", msg_txt)
 
 
 myfllwings = []
@@ -56,17 +56,17 @@ updater = Updater(os.environ["chirpage"], use_context=True)
 dispatcher = updater.dispatcher
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO)
+	format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+	level=logging.INFO)
 
 
 def start(update, context):
 	context.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="""Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
+		chat_id=update.effective_chat.id,
+		text="""Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
 		You can also forward voice messages to me to get the file sizes of them.
 		Duty Machine service is temporarily down due to GitHub's term of service.""",
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def arc_favs(update, ctx):
@@ -86,15 +86,15 @@ def arc_favs(update, ctx):
 	_t = None
 
 	sended_msg = ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="Now fetching @" + text +
-	    "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
-	    parse_mode=telegram.ParseMode.HTML)
+		chat_id=update.effective_chat.id,
+		text="Now fetching @" + text +
+		"'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
+		parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchFavs(text)
 	# log(graf, "favs", text, "2Lmwx" + ':favs')
 	sended_msg.edit_text(
-	    text="*" + text + "*\n" + graf["url"],
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		text="*" + text + "*\n" + graf["url"],
+		parse_mode=telegram.ParseMode.MARKDOWN)
 	print(graf)
 
 # @telegram.ext.dispatcher.run_async
@@ -118,8 +118,8 @@ def arc_user(update, ctx):
 					'The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.')
 		else:
 			ctx.bot.send_message(
-                    chat_id=update.effective_chat.id,
-                    text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
+				chat_id=update.effective_chat.id,
+				text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
 			return
 	text = text.split('/')[-1]
 	splited = text.split(" as ")
@@ -129,37 +129,40 @@ def arc_user(update, ctx):
 		title = splited[1]
 		as_what = " as " + title
 	sended_msg = ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
-	    parse_mode=telegram.ParseMode.HTML)
+		chat_id=update.effective_chat.id,
+		text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
+		parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchUser(text, title=title)
 	log(graf, text, 'user', text + ':timeline')
 	sended_msg.edit_text(
-	    text="<b>" + text + "</b>\n" + graf["url"],
-	    parse_mode=telegram.ParseMode.HTML)
+		text="<b>" + text + "</b>\n" + graf["url"],
+		parse_mode=telegram.ParseMode.HTML)
 	print(graf)
 
 
 def arc_timeline(update, ctx):
 	sended_msg = ctx.bot.send_message(
-	    chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
+		parse_mode=telegram.ParseMode.MARKDOWN)
 	graf = graph.fetchTimeline()
 	log(graf, "tl", 'timeline', "2Lmwx" + ':favs')
 	sended_msg.edit_text(
-	    text="*" + " Timeline tweets" + "*\n" + graf["url"],
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		text="*" + " Timeline tweets" + "*\n" + graf["url"],
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-list_reg = re.compile(r"^(https?://)?([a-zA-Z.]+\.)?twitter\.com/i/lists/[0-9]+")
+list_reg = re.compile(
+	r"^(https?://)?([a-zA-Z.]+\.)?twitter\.com/i/lists/[0-9]+")
+
+
 def arc_list(update, ctx):
 	list_id = "1496265153821745158"
 	text = update.message.text
-	print(1, text)
 	if text.startswith("/"):
 		text = cutcmd(text)
 # if text.isdigit():
-		list_id = text
+		if text.isdigit():
+			list_id = text
 #		else:
 #			update.message.reply_markdown("Please specify a list ID.")
 #			return
@@ -171,17 +174,19 @@ def arc_list(update, ctx):
 		else:
 			clean_link = res.group(0)
 			print("clean_link:", clean_link)
-			list_id = clean_link.split('/')[-1].strip()
+			_list_id = clean_link.split('/')[-1].strip()
+			if _list_id.length > 1:
+				list_id = _list_id
 			print("list_id:", list_id)
 	sended_msg = ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text=f"Now fetching list {list_id}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
-	    parse_mode=telegram.ParseMode.HTML)
+		chat_id=update.effective_chat.id,
+		text=f"Now fetching list {list_id}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
+		parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchList(list_id)
 
 	sended_msg.edit_text(
-	    text="*" + " Archived tweets" + "*\n" + graf["url"],
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		text="*" + " Archived tweets" + "*\n" + graf["url"],
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def search_tweets(update, ctx):
@@ -190,9 +195,9 @@ def search_tweets(update, ctx):
 	graf = graph.search(text, title=text)
 	log(graf, text, 'search', text + ':search')
 	ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="*" + text + "*\n" + graf["url"],
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		chat_id=update.effective_chat.id,
+		text="*" + text + "*\n" + graf["url"],
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def single_tweet(update, ctx):
@@ -217,9 +222,9 @@ def dutymachine(update, ctx):
 		resp = duty.dm(text)
 		log('DUTY', text, 'duty', resp)
 	ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="`" + text + "`\n" + resp,
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		chat_id=update.effective_chat.id,
+		text="`" + text + "`\n" + resp,
+		parse_mode=telegram.ParseMode.MARKDOWN)
 	"""
 
 
@@ -234,14 +239,14 @@ def userduty(update, ctx):
 	resp = duty.dm(graf)
 	log(graf, text, 'userduty', resp)
 	ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text="`" + text + "`\n" + resp,
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		chat_id=update.effective_chat.id,
+		text="`" + text + "`\n" + resp,
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def textilegraph(update, ctx):
-  graf = publish.txtile(cutcmd(update.message.text))
-  update.message.reply_markdown("`" + reg.escape(graf) + "`")
+	graf = publish.txtile(cutcmd(update.message.text))
+	update.message.reply_markdown("`" + reg.escape(graf) + "`")
 
 
 def followings(update, ctx):
@@ -251,7 +256,7 @@ def followings(update, ctx):
 	api = graph.getApi()
 	try:
 		for user in tweepy.Cursor(
-                api.friends, screen_name="2Lmwx", count=4999).items():
+				api.friends, screen_name="2Lmwx", count=4999).items():
 			print(user.screen_name)
 			fllwings.append(user.screen_name)
 	except:
@@ -268,9 +273,9 @@ def followings(update, ctx):
 def voice_listener(update, ctx):
 	voi = update.message.voice
 	ctx.bot.send_message(
-	    chat_id=update.effective_chat.id,
-	    text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
-	    parse_mode=telegram.ParseMode.MARKDOWN)
+		chat_id=update.effective_chat.id,
+		text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size/1024,2)}KB",
+		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def photo_uploader(update, ctx):
@@ -291,8 +296,8 @@ def file_keeper(update, ctx):
 	print(sizmb)
 	if sizmb >= 5:
 		msg.reply_text(
-		    r'_Your file exceeds the limit of *5MB*\._',
-		    parse_mode='Markdown')
+			r'_Your file exceeds the limit of *5MB*\._',
+			parse_mode='Markdown')
 	else:
 		file = bot.getFile(update.message.document.file_id)
 		graphfile = graph.save_img(file.file_path)
@@ -310,13 +315,13 @@ def plain_msg(update, ctx):
 		print('User in link: ' + user)
 		sended_msg = update.message.reply_text(text=f"""Found user in link: @{user}
 This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
-                                             quote=True)
+											   quote=True)
 		graf = graph.fetchUser(user, title=user)
 		log(graf, user, 'user', text + ':timeline')
 		sended_msg.edit_text(
-		    text="Got user from link: " + user + "\n" + graf["url"],
-                 			parse_mode=telegram.ParseMode.HTML
-                )
+			text="Got user from link: " + user + "\n" + graf["url"],
+			parse_mode=telegram.ParseMode.HTML
+		)
 		print(graf)
 	elif reg.is_list(text):
 		arc_list(update, ctx)
@@ -328,15 +333,16 @@ This process will be finished in several minutes, for we have supported archivin
 		resp = duty.dm(text)
 		log('DUTY', text, 'duty', resp)
 		ctx.bot.send_message(
-		    chat_id=update.effective_chat.id,
-		    text="`" + text + "`\n" + resp,
-		    parse_mode=telegram.ParseMode.MARKDOWN)
+			chat_id=update.effective_chat.id,
+			text="`" + text + "`\n" + resp,
+			parse_mode=telegram.ParseMode.MARKDOWN)
 		"""
+
 
 def download_video(update, ctx):
 	sended_message = update.message.reply_text(
-			"Now downloading video…", parse_mode='MarkdownV2')
-	url = cutcmd(update.message.text) #.lower() Bilibili 的 BV 号是区分大小写的！！
+		"Now downloading video…", parse_mode='MarkdownV2')
+	url = cutcmd(update.message.text)  # .lower() Bilibili 的 BV 号是区分大小写的！！
 	storage.mkdir("/pan/annie/temp/")
 	fid = reg.id_generator(4)
 	storage.mkdir(f"/pan/annie/temp/{fid}/")
@@ -349,14 +355,17 @@ def download_video(update, ctx):
 	for f in files:
 		location = f"/pan/annie/temp/{fid}/{f}"
 		sended_message.edit_text(f"Location: {location}")
-		bot.send_video(chat_id=update.message.chat_id, video=open(location, 'rb'), supports_streaming=True)
+		bot.send_video(chat_id=update.message.chat_id, video=open(
+			location, 'rb'), supports_streaming=True)
 		# TODO: Files > 50 MB cannot be sent by bot directly!
 		storage.rm(f"/pan/annie/temp/{fid}")
 		return
 	# TODO: 错误处理
 
+
 def clear():
 	storage.clear_temp()
+
 
 start_handler = CommandHandler('start', start, run_async=True)
 clear_handler = CommandHandler('clear', clear, run_async=True)
@@ -376,13 +385,13 @@ textile_handler = CommandHandler('textile', textilegraph)
 message_handler = MessageHandler(Filters.text & (
 	~Filters.command), plain_msg, run_async=True)
 file_handler = MessageHandler(
-    Filters.document.image & Filters.chat_type.private, file_keeper, run_async=True)
+	Filters.document.image & Filters.chat_type.private, file_keeper, run_async=True)
 voice_handler = MessageHandler(Filters.voice & Filters.chat_type.private,
-                               voice_listener, run_async=True)
+							   voice_listener, run_async=True)
 photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
-                               photo_uploader, run_async=True)
+							   photo_uploader, run_async=True)
 video_handler = CommandHandler(["vid", "video", "annie"], download_video,
-                               filters=~Filters.update.edited_message,  run_async=False)
+							   filters=~Filters.update.edited_message,  run_async=False)
 
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(clear_handler)
