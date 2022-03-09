@@ -8,7 +8,7 @@ import pagination
 import json
 import select
 import ffm
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Tuple, Union
 from tweets import *
 
 current_tweet = ""
@@ -32,6 +32,16 @@ def getTweepy():
 
 def getApi():
   return api
+
+def get_tweetid_range(tweets) -> Tuple[int, int]:
+  since_id = max_id = None
+  for tweet in tweets:
+    if since_id is None or tweet.id < since_id:
+      since_id = tweet.id
+    if max_id is None or tweet.id > max_id:
+      max_id = tweet.id
+  return since_id, max_id
+
 
 def save_img(url: str, save2disk : Optional[bool] = False) -> str:
   raw_url = url
@@ -138,10 +148,14 @@ def fetchFavs(user: str = "elonmusk", title: str = ''):
   if title == "":
     title = user + "-favs-" + id_generator(4)
   print("Fetching @" + user + "'s favorites")
-  tweets = tweepy.Cursor(api.favorites, screen_name=user,
-                         tweet_mode="extended").items(60)
+  tweets = api.get_favorites(screen_name=user, count=60)
+  #tweets = tweepy.Cursor(api.favorites, screen_name=user, tweet_mode="extended").items(60)
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title=title, author='Twitter Likes', text="".join(ooo))
+  since_id, max_id = get_tweetid_range(tweets)
+  print("========= since id is", since_id, "/ max id is",  max_id)
+  graf["since_id"] = since_id
+  graf["max_id"] = max_id
   return graf
 
 
@@ -225,12 +239,12 @@ def dealWithTweets(tweets, **pa):
       htm.append(repl)
       
     # deal with text
-    status_text = t.full_text #extended_mode
+    status_text = t.text #extended_mode
     if status_text.startswith("RT @") & status_text.endswith("…"):
       # This may be a retweet with over 140 chars
       if hasattr(t, 'retweeted_status'):
         rt = t.retweeted_status
-        status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.full_text
+        status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.text
     htm.append("<p>" + tco(status_text) + r"</p>")
 
     # Image(s)

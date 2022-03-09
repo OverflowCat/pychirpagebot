@@ -22,7 +22,6 @@ import graph
 
 print("App started")
 
-
 def log(_path, _user, _type, _query):
 	r = requests.post(
 		os.environ["CHSHDB"],
@@ -411,5 +410,12 @@ dispatcher.add_handler(photo_handler)
 dispatcher.add_handler(file_handler)
 dispatcher.add_handler(video_handler)
 
+""" j = updater.job_queue
+def news_update(context):
+	context.bot.send_message(chat_id=-1001667910766, text="I'm alive!")
+j.run_repeating(news_update, interval=10)
+ """
 # 拉清单
 updater.start_polling()
+updater.idle()
+logger.info('Bot started.')
