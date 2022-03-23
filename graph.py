@@ -239,12 +239,21 @@ def dealWithTweets(tweets, **pa):
       htm.append(repl)
       
     # deal with text
-    status_text = t.text #extended_mode
-    if status_text.startswith("RT @") & status_text.endswith("…"):
+    status_text = ""
+    if hasattr(t, "full_text"):
+      status_text = t.full_text #extended_mode, old
+    else:
+      status_text = t.text # used by favs
+    if status_text.startswith("RT @") & status_text.endswith("…"): # ?
       # This may be a retweet with over 140 chars
       if hasattr(t, 'retweeted_status'):
         rt = t.retweeted_status
-        status_text = f"RT {get_user_link(rt.user, True, True)}: " + rt.text
+        r_status_text = ""
+        if hasattr(rt, "full_text"):
+          r_status_text = rt.full_text
+        else:
+          r_status_text = rt.text
+        status_text = f"RT {get_user_link(rt.user, True, True)}: " + r_status_text
     htm.append("<p>" + tco(status_text) + r"</p>")
 
     # Image(s)

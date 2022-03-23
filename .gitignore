@@ -7,3 +7,4 @@ ffmpeg
 ffprobe
 __pycache__
 *.json
+*.crx

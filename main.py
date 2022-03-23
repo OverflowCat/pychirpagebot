@@ -361,6 +361,10 @@ def download_video(update, ctx):
 		return
 	# TODO: 错误处理
 
+def del_cache(update, ctx):
+	storage.rm("./temp")
+	storage.mkdir("./temp")
+	update.message.reply_text("Alle klar!")
 
 def clear():
 	storage.clear_temp()
@@ -391,6 +395,7 @@ photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
 							   photo_uploader, run_async=True)
 video_handler = CommandHandler(["vid", "video", "annie"], download_video,
 							   filters=~Filters.update.edited_message,  run_async=False)
+clear_handler = CommandHandler('clear', del_cache, run_async=False)
 
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(clear_handler)
