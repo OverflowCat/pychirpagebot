@@ -10,6 +10,7 @@ import select
 import ffm
 from typing import Optional, Dict, List, Tuple, Union
 from tweets import *
+from cachetools import cached, TTLCache
 
 current_tweet = ""
 use_png = False
@@ -42,7 +43,7 @@ def get_tweetid_range(tweets) -> Tuple[int, int]:
       max_id = tweet.id
   return since_id, max_id
 
-
+@cached(cache=TTLCache(maxsize=8192, ttl=432000))
 def save_img(url: str, save2disk : Optional[bool] = False) -> str:
   raw_url = url
   res = db.lookup_pic(raw_url)
@@ -141,7 +142,7 @@ def fetch_tweet(tweet, title=''):
   if title == '':
     title = "tweet"
 
-
+@cached(cache=TTLCache(maxsize=500, ttl=1800))
 def fetchFavs(user: str = "elonmusk", title: str = ''):
   if user == "i":
     user = "twitter"
@@ -158,7 +159,7 @@ def fetchFavs(user: str = "elonmusk", title: str = ''):
   graf["max_id"] = max_id
   return graf
 
-
+@cached(cache=TTLCache(maxsize=1000, ttl=3600))
 def fetchUser(user: str = "elonmusk", title: str = ""):
   if user == "ofc":
     user = "elonmusk"
@@ -171,7 +172,7 @@ def fetchUser(user: str = "elonmusk", title: str = ""):
   graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
   return graf
 
-
+@cached(cache=TTLCache(maxsize=1000, ttl=3600))
 def fetchList(list_id: str, title: str = ''):
   # tweets = tweepy.Cursor(api.list_timeline, list_id=1496265153821745158,
   #                       tweet_mode="extended").items(60)
@@ -183,7 +184,7 @@ def fetchList(list_id: str, title: str = ''):
   graf = graph.post(title=list_id, author='Twitter', author_url=f"https://twitter.com/i/lists/{list_id}", text=" "+"".join(ooo))
   return graf
 
-
+@cached(cache=TTLCache(maxsize=50, ttl=200))
 def fetchTimeline(user: str = ""):
   tweets = api.home_timeline(tweet_mode="extended")
   ooo = dealWithTweets(tweets, username=True)

@@ -20,6 +20,7 @@ msgpack = "^1.0.2"
 PyMySQL = "^1.0.2"
 tweepy = "^4.6.0"
 textile = "^4.0.2"
+cachetools = "^4.2.2"
 
 [tool.poetry.dev-dependencies]
 
