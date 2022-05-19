@@ -1,5 +1,6 @@
 import re
 import os
+import time
 import storage
 import tweepy
 import requests
@@ -189,6 +190,15 @@ def fetchTimeline(user: str = ""):
   tweets = api.home_timeline(tweet_mode="extended")
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(ooo))
+  return graf
+
+@cached(cache=TTLCache(maxsize=10, ttl=15))
+def fetchMentions(user: str = "neko_modules"):
+  tweets = api.mentions_timeline(tweet_mode="extended")
+  ooo = dealWithTweets(tweets, username=True)
+  # get time
+  hh_mm = time.strftime("%H %M", time.localtime())
+  graf = graph.post(title=f"neko mentions {hh_mm}", author="Twitter", text=" "+''.join(ooo))
   return graf
 
 def search(query, title: str = 'text'):

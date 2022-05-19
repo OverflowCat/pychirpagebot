@@ -188,6 +188,17 @@ def arc_list(update, ctx):
 		parse_mode=telegram.ParseMode.MARKDOWN)
 
 
+def arc_mentions(update, ctx):
+	sended_msg = ctx.bot.send_message(
+		chat_id=update.effective_chat.id,
+		text="Now fetching mentions…\n",
+		parse_mode=telegram.ParseMode.HTML)
+	graf = graph.fetchMentions()
+	log(graf, "mentions", 'mentions', "2Lmwx" + ':favs')
+	sended_msg.edit_text(
+		text="*Mentions tweets*\n" + graf["url"],
+		parse_mode=telegram.ParseMode.MARKDOWN)
+
 def search_tweets(update, ctx):
 	text = update.message.text
 	text = cutcmd(text)
@@ -374,6 +385,7 @@ start_handler = CommandHandler('start', start, run_async=True)
 clear_handler = CommandHandler('clear', clear, run_async=True)
 favs_handler = CommandHandler(['favs', 'fav'], arc_favs, run_async=True)
 user_handler = CommandHandler(['user', 'twitter'], arc_user, run_async=True)
+mentions_handler = CommandHandler(['mentions', 'mention', 'men'], arc_mentions, run_async=True)
 list_handler = CommandHandler(['list', 'li'], arc_list, run_async=True)
 timeline_handler = CommandHandler(
 	["tl", "timeline"], arc_timeline, run_async=True)
@@ -402,6 +414,7 @@ dispatcher.add_handler(clear_handler)
 dispatcher.add_handler(message_handler)
 dispatcher.add_handler(favs_handler)
 dispatcher.add_handler(user_handler)
+dispatcher.add_handler(mentions_handler)
 dispatcher.add_handler(list_handler)
 dispatcher.add_handler(timeline_handler)
 # dispatcher.add_handler(search_handler)
