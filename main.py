@@ -74,12 +74,12 @@ def arc_favs(update, ctx):
 	_t = text.lower()
 	if _t == "" or _t == "ofc" or _t == "i":
 		if update.effective_chat.id == (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
-			text = "2LMWX"
+			text = "neko_modules"
 		else:
 			update.message.reply_markdown("Please specify a username.")
 			return
 			# text = "elonmusk"
-	elif _t == "2lmwx":
+	elif _t == "neko_modules":
 		if update.effective_chat.id != (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
 			return
 	_t = None
@@ -90,7 +90,7 @@ def arc_favs(update, ctx):
 		"'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
 		parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchFavs(text)
-	# log(graf, "favs", text, "2Lmwx" + ':favs')
+	# log(graf, "favs", text, "neko_modules" + ':favs')
 	sended_msg.edit_text(
 		text="*" + text + "*\n" + graf["url"],
 		parse_mode=telegram.ParseMode.MARKDOWN)
@@ -144,7 +144,7 @@ def arc_timeline(update, ctx):
 		chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
 		parse_mode=telegram.ParseMode.MARKDOWN)
 	graf = graph.fetchTimeline()
-	log(graf, "tl", 'timeline', "2Lmwx" + ':favs')
+	log(graf, "tl", 'timeline', "neko_modules" + ':favs')
 	sended_msg.edit_text(
 		text="*" + " Timeline tweets" + "*\n" + graf["url"],
 		parse_mode=telegram.ParseMode.MARKDOWN)
@@ -194,7 +194,7 @@ def arc_mentions(update, ctx):
 		text="Now fetching mentions…\n",
 		parse_mode=telegram.ParseMode.HTML)
 	graf = graph.fetchMentions()
-	log(graf, "mentions", 'mentions', "2Lmwx" + ':favs')
+	log(graf, "mentions", 'mentions', "neko_modules" + ':favs')
 	sended_msg.edit_text(
 		text="*Mentions tweets*\n" + graf["url"],
 		parse_mode=telegram.ParseMode.MARKDOWN)
@@ -266,7 +266,7 @@ def followings(update, ctx):
 	api = graph.getApi()
 	try:
 		for user in tweepy.Cursor(
-				api.friends, screen_name="2Lmwx", count=4999).items():
+				api.friends, screen_name="neko_modules", count=4999).items():
 			print(user.screen_name)
 			fllwings.append(user.screen_name)
 	except:
@@ -375,9 +375,9 @@ def download_video(update, ctx):
 def del_cache(update, ctx):
 	storage.rm("./temp")
 	storage.mkdir("./temp")
-	update.message.reply_text("Alle klar!")
+	update.message.reply_text("Alle klar!\n"+storage.get_disk_usage("./"))
 
-def clear():
+def clear(): # ???
 	storage.clear_temp()
 
 
