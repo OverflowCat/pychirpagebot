@@ -29,6 +29,8 @@ auth = tweepy.OAuthHandler(os.environ["T1"], os.environ["T2"])
 auth.set_access_token(os.environ["T3"], os.environ["T4"])
 api = tweepy.API(auth)
 
+is_ffmpeg_installed = ffm.is_ffmpeg_installed()
+
 def getTweepy():
   return tweepy
 
@@ -100,7 +102,7 @@ def save_imgs(imgurls: List[str]) -> List[str]:
   print("Saving " + ", ".join(imgurls))
   return [save_img(x) for x in imgurls]
 
-def save_vid(url, removeFailed=False):
+def save_vid(url, removeFailed=False) -> List[str]:
   return [upload(x) for x in ffm.split(save_img(url, True)) if not removeFailed or x != ""]
   # 当 not 和 and 及 or 在一起运算时，优先级为 not > and > or，即 t and f or not t == t and f or f == f or f == f
 
@@ -205,7 +207,7 @@ def search(query, title: str = 'text'):
   print('Searching "' + query + '"')
   search_results = api.search(q=query, count=65, tweet_mode='extended')
   output = dealWithTweets(search_results, username=True)
-  graf = graph.post(title=title, author='Twitter Search', text="".join(output))  
+  graf = graph.post(title=title, author='Twitter Search', text="".join(output))
   return graf
 
 def dealWithTweets(tweets, **pa):
@@ -243,12 +245,12 @@ def dealWithTweets(tweets, **pa):
           _in_reply_to_status_id_str =  t.in_reply_to_status_id_str #the text
         else:
           _in_reply_to_status_id_str = '@' + t.in_reply_to_screen_name #the text
-        repl = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name 
+        repl = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name
         repl += '</code> · _<code>' + t.in_reply_to_user_id_str
         repl += '</code> : # <a href="' + replurl + '">'
         repl += _in_reply_to_status_id_str + '</a>'
       htm.append(repl)
-      
+
     # deal with text
     status_text = ""
     if hasattr(t, "full_text"):
@@ -269,13 +271,13 @@ def dealWithTweets(tweets, **pa):
 
     # Image(s)
     if 'media' in t.entities:
-      imgurls = []	
-      for media in t.extended_entities['media']:	
-        imgurls.append(" " + media['media_url'])	
-      graphimgurls = save_imgs(imgurls)	
-      graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]	
+      imgurls = []
+      for media in t.extended_entities['media']:
+        imgurls.append(" " + media['media_url'])
+      graphimgurls = save_imgs(imgurls)
+      graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]
       htm.append("".join(graphimgshtml))
-    
+
     # Save videos
     global current_tweet
     current_tweet = t._json
@@ -287,12 +289,15 @@ def dealWithTweets(tweets, **pa):
         variants = [variant for variant in variants if variant["content_type"] == "video/mp4"]
         sorted_variants = sorted(variants, key=lambda va : -va["bitrate"])
         # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
-        vid_urls = save_vid(sorted_variants[0]["url"]) # <- save_img(…)
-        print(f"vid_rls: {', '.join(vid_urls)}")
-        htm.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>' for vid_url in vid_urls]))
+        video_url = sorted_variants[0]["url"]
+        vid_urls = save_vid(video_url) if is_ffmpeg_installed else [video_url]  # <- save_img(…)
+        print(f"vid_urls: {', '.join(vid_urls)}")
+        htm.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption'
+                            f'>Video</figcaption></figure>' for vid_url in vid_urls]))
         # TODO: Move figure to its preview image
-        #htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption>Video</figcaption></figure>')
-   
+        # htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video>
+        # <figcaption>Video</figcaption></figure>')
+
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
     htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
     output.append("".join(htm))

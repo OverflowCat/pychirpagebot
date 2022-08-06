@@ -16,12 +16,16 @@ import os
 import re
 import telegram
 from dotenv import load_dotenv
+from ffm import is_ffmpeg_installed
 
 load_dotenv()  # graph.py requires env
 import storage
 import graph
 
-print("App started")
+logger = logging.getLogger(__name__)
+
+logger.info("Starting up...")
+is_ffmpeg_installed() or logger.warning("ffmpeg is not installed. Video archiving will not work.")
 
 
 def log(_path, _user, _type, _query):
@@ -118,7 +122,8 @@ def arc_user(update, ctx, cmd=True):
     else:
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and "_"s only.')
+            text='Please input a valid twitter username rather than a link, which contains alphanumeric letters and '
+                 '"_"s only.')
         return
     text = text.split('/')[-1]
     splited = text.split(" as ")
@@ -326,12 +331,12 @@ def plain_msg(update, ctx):
         if user.startswith("@"):
             user = user[1:]
         print('User in link: ' + user)
-        sended_msg = update.message.reply_text(text=f"""Found user in link: @{user}
+        sent_msg = update.message.reply_text(text=f"""Found user in link: @{user}
 This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
-                                               quote=True)
+                                             quote=True)
         graf = graph.fetchUser(user, title=user)
         log(graf, user, 'user', text + ':timeline')
-        sended_msg.edit_text(
+        sent_msg.edit_text(
             text="Got user from link: " + user + "\n" + graf["url"],
             parse_mode=telegram.ParseMode.HTML
         )
@@ -429,7 +434,7 @@ def news_update(context):
 j.run_repeating(news_update, interval=10)
  """
 # 拉清单
+logger.info('Bot started.')
+
 updater.start_polling()
 updater.idle()
-logger = logging.getLogger(__name__)
-logger.info('Bot started.')
