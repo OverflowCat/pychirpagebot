@@ -431,4 +431,5 @@ j.run_repeating(news_update, interval=10)
 # 拉清单
 updater.start_polling()
 updater.idle()
+logger = logging.getLogger(__name__)
 logger.info('Bot started.')
