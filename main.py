@@ -88,14 +88,14 @@ def arc_favs(update, ctx):
             return
     _t = None
 
-    sended_msg = ctx.bot.send_message(
+    sent_msg = ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Now fetching @" + text +
              "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
         parse_mode=telegram.ParseMode.HTML)
     graf = graph.fetchFavs(text)
     # log(graf, "favs", text, "neko_modules" + ':favs')
-    sended_msg.edit_text(
+    sent_msg.edit_text(
         text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
     print(graf)
@@ -127,26 +127,26 @@ def arc_user(update, ctx, cmd=True):
     if splited != [text]:
         title = splited[1]
         as_what = " as " + title
-    sended_msg = ctx.bot.send_message(
+    sent_msg = ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support "
              f"archiving large videos now.</i>",
         parse_mode=telegram.ParseMode.HTML)
     graf = graph.fetchUser(text, title=title)
     log(graf, text, 'user', text + ':timeline')
-    sended_msg.edit_text(
+    sent_msg.edit_text(
         text="<b>" + text + "</b>\n" + graf["url"],
         parse_mode=telegram.ParseMode.HTML)
     print(graf)
 
 
 def arc_timeline(update, ctx):
-    sended_msg = ctx.bot.send_message(
+    sent_msg = ctx.bot.send_message(
         chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
         parse_mode=telegram.ParseMode.MARKDOWN)
     graf = graph.fetchTimeline()
     log(graf, "tl", 'timeline', "neko_modules" + ':favs')
-    sended_msg.edit_text(
+    sent_msg.edit_text(
         text="*" + " Timeline tweets" + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
 
@@ -255,7 +255,7 @@ def userduty(update, ctx):
         parse_mode=telegram.ParseMode.MARKDOWN)
 
 
-def textilegraph(update, ctx):
+def textile_graph(update, ctx):
     graf = publish.txtile(cutcmd(update.message.text))
     update.message.reply_markdown("`" + reg.escape(graf) + "`")
 
@@ -292,9 +292,9 @@ def voice_listener(update, ctx):
 def photo_uploader(update, ctx):
     msg = update.message
     file = bot.getFile(update.message.photo[-1].file_id)
-    graphfile = graph.save_img(file.file_path)
+    graph_file = graph.save_img(file.file_path)
 
-    bot.send_message(chat_id=update.effective_chat.id, text=graphfile)
+    bot.send_message(chat_id=update.effective_chat.id, text=graph_file)
 
 
 # DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
@@ -305,16 +305,16 @@ def file_keeper(update, ctx):
     # print(update.message)
     msg = update.message
     siz = msg.document.file_size
-    sizmb = siz / 1024.0 ** 2
-    print(sizmb)
-    if sizmb >= 5:
+    siz_mb = siz / 1024.0 ** 2
+    print(f"File size is {siz_mb} MB")
+    if siz_mb >= 5:
         msg.reply_text(
             r'_Your file exceeds the limit of *5MB*\._',
             parse_mode='Markdown')
     else:
         file = bot.getFile(update.message.document.file_id)
-        graphfile = graph.save_img(file.file_path)
-        msg.reply_text(text=str(format(sizmb, '.2f')) + 'MB\n' + graphfile)
+        graph_file = graph.save_img(file.file_path)
+        msg.reply_text(text=str(format(siz_mb, '.2f')) + 'MB\n' + graph_file)
 
 
 def plain_msg(update, ctx):
@@ -343,17 +343,17 @@ This process will be finished in several minutes, for we have supported archivin
     elif reg.is_duty(text):
         dutymachine(update, ctx)
         """
-		resp = duty.dm(text)
-		log('DUTY', text, 'duty', resp)
-		ctx.bot.send_message(
-			chat_id=update.effective_chat.id,
-			text="`" + text + "`\n" + resp,
-			parse_mode=telegram.ParseMode.MARKDOWN)
-		"""
+        resp = duty.dm(text)
+        log('DUTY', text, 'duty', resp)
+        ctx.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="`" + text + "`\n" + resp,
+            parse_mode=telegram.ParseMode.MARKDOWN)
+        """
 
 
 def download_video(update, ctx):
-    sended_message = update.message.reply_text(
+    sent_message = update.message.reply_text(
         "Now downloading video…", parse_mode='MarkdownV2')
     url = cutcmd(update.message.text)  # .lower() Bilibili 的 BV 号是区分大小写的！！
     storage.mkdir("/pan/annie/temp/")
@@ -367,7 +367,7 @@ def download_video(update, ctx):
     files = os.listdir(f"/pan/annie/temp/{fid}/")
     for f in files:
         location = f"/pan/annie/temp/{fid}/{f}"
-        sended_message.edit_text(f"Location: {location}")
+        sent_message.edit_text(f"Location: {location}")
         bot.send_video(chat_id=update.message.chat_id, video=open(
             location, 'rb'), supports_streaming=True)
         # TODO: Files > 50 MB cannot be sent by bot directly!
@@ -402,7 +402,7 @@ duty_handler = CommandHandler(
 userduty_handler = CommandHandler('userduty', userduty, run_async=True)
 followings_handler = CommandHandler("followings", followings, run_async=True)
 ping_handler = CommandHandler('ping', ping)
-textile_handler = CommandHandler('textile', textilegraph)
+textile_handler = CommandHandler('textile', textile_graph)
 message_handler = MessageHandler(Filters.text & (
     ~Filters.command), plain_msg, run_async=True)
 file_handler = MessageHandler(
@@ -415,28 +415,17 @@ video_handler = CommandHandler(["vid", "video", "annie"], download_video,
                                filters=~Filters.update.edited_message, run_async=False)
 clear_handler = CommandHandler('clear', del_cache, run_async=False)
 
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(clear_handler)
-dispatcher.add_handler(message_handler)
-dispatcher.add_handler(favs_handler)
-dispatcher.add_handler(user_handler)
-dispatcher.add_handler(mentions_handler)
-dispatcher.add_handler(list_handler)
-dispatcher.add_handler(timeline_handler)
-# dispatcher.add_handler(search_handler)
-dispatcher.add_handler(duty_handler)
-dispatcher.add_handler(followings_handler)
-dispatcher.add_handler(ping_handler)
-dispatcher.add_handler(textile_handler)
-dispatcher.add_handler(userduty_handler)
-dispatcher.add_handler(voice_handler)
-dispatcher.add_handler(photo_handler)
-dispatcher.add_handler(file_handler)
-dispatcher.add_handler(video_handler)
+handlers = [
+    start_handler, clear_handler, favs_handler, user_handler, mentions_handler, list_handler, timeline_handler,
+    # search_handler,
+    duty_handler, userduty_handler, followings_handler, ping_handler, textile_handler, message_handler, file_handler,
+    voice_handler, photo_handler, video_handler, clear_handler
+]
+map(dispatcher.add_handler, handlers)
 
 """ j = updater.job_queue
 def news_update(context):
-	context.bot.send_message(chat_id=-1001667910766, text="I'm alive!")
+    context.bot.send_message(chat_id=-1001667910766, text="I'm alive!")
 j.run_repeating(news_update, interval=10)
  """
 # 拉清单
