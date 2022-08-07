@@ -47,5 +47,8 @@ def get_duration(path: str) -> float:
 
 
 def is_ffmpeg_installed() -> bool:
-    result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    return result.returncode == 0
+    try:
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        return True
+    except FileNotFoundError:
+        return False
