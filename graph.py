@@ -195,7 +195,7 @@ def fetchTimeline(user: str = ""):
   return graf
 
 @cached(cache=TTLCache(maxsize=10, ttl=15))
-def fetchMentions(user: str = "neko_modules"):
+def fetchMentions(user: str = "lazy_static"):
   tweets = api.mentions_timeline(tweet_mode="extended")
   ooo = dealWithTweets(tweets, username=True)
   # get time

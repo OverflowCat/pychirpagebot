@@ -5,7 +5,6 @@ from telegram.ext import Updater
 import requests
 from datetime import datetime
 from telegram import ParseMode
-from telegram.ext.defaults import Defaults
 import math
 import publish
 import json
@@ -57,8 +56,8 @@ def cutcmd(msg_txt):
 
 myfllwings = []
 
-defaults = Defaults(parse_mode=ParseMode.HTML, run_async=True)
-bot = telegram.Bot(token=os.environ["chirpage"], defaults=defaults)
+defaults = telegram.ext.Defaults(parse_mode=ParseMode.HTML, run_async=True)
+bot = telegram.ext.ExtBot(token=os.environ["chirpage"], defaults=defaults)
 updater = Updater(os.environ["chirpage"], use_context=True)
 dispatcher = updater.dispatcher
 
@@ -82,12 +81,12 @@ def arc_favs(update, ctx):
     _t = text.lower()
     if _t == "" or _t == "ofc" or _t == "i":
         if update.effective_chat.id == (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
-            text = "neko_modules"
+            text = "lazy_static"
         else:
             update.message.reply_markdown("Please specify a username.")
             return
         # text = "elonmusk"
-    elif _t == "neko_modules":
+    elif _t == "lazy_static":
         if update.effective_chat.id != (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
             return
     _t = None
@@ -98,7 +97,7 @@ def arc_favs(update, ctx):
              "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
         parse_mode=telegram.ParseMode.HTML)
     graf = graph.fetchFavs(text)
-    # log(graf, "favs", text, "neko_modules" + ':favs')
+    # log(graf, "favs", text, "lazy_static" + ':favs')
     sent_msg.edit_text(
         text="*" + text + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
@@ -150,7 +149,7 @@ def arc_timeline(update, ctx):
         chat_id=update.effective_chat.id, text="Now fetching timeline tweets…",
         parse_mode=telegram.ParseMode.MARKDOWN)
     graf = graph.fetchTimeline()
-    log(graf, "tl", 'timeline', "neko_modules" + ':favs')
+    log(graf, "tl", 'timeline', "lazy_static" + ':favs')
     sent_msg.edit_text(
         text="*" + " Timeline tweets" + "*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
@@ -200,7 +199,7 @@ def arc_mentions(update, ctx):
         text="Now fetching mentions…\n",
         parse_mode=telegram.ParseMode.HTML)
     graf = graph.fetchMentions()
-    log(graf, "mentions", 'mentions', "neko_modules" + ':favs')
+    log(graf, "mentions", 'mentions', "lazy_static" + ':favs')
     sended_msg.edit_text(
         text="*Mentions tweets*\n" + graf["url"],
         parse_mode=telegram.ParseMode.MARKDOWN)
@@ -272,7 +271,7 @@ def followings(update, ctx):
     api = graph.getApi()
     try:
         for user in tweepy.Cursor(
-                api.friends, screen_name="neko_modules", count=4999).items():
+                api.friends, screen_name="lazy_static", count=4999).items():
             print(user.screen_name)
             fllwings.append(user.screen_name)
     except:
@@ -426,7 +425,12 @@ handlers = [
     duty_handler, userduty_handler, followings_handler, ping_handler, textile_handler, message_handler, file_handler,
     voice_handler, photo_handler, video_handler, clear_handler
 ]
-map(dispatcher.add_handler, handlers)
+
+for handler in handlers:
+    # Python 3's map function is lazy, unlike Python 2's map.
+    # You have to consume it somehow: list(map(...))
+    # or just use for loop:
+    dispatcher.add_handler(handler)
 
 """ j = updater.job_queue
 def news_update(context):
