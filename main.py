@@ -112,7 +112,7 @@ def arc_user(update, ctx, cmd=True):
     if text == "":
         update.message.reply_markdown("Please specify a username.")
         return
-    if "twitter.com" not in text:
+    if "twitter.com" not in text or "vxtwitter.com" not in text:
         if reg.is_valid_twitter_username(text) or reg.is_valid_as_twitter_username(text):
             pass
         else:
