@@ -157,7 +157,7 @@ def fetchFavs(user: str = "elonmusk", title: str = ''):
   ooo = dealWithTweets(tweets, username=True)
   graf = graph.post(title=title, author='Twitter Likes', text="".join(ooo))
   since_id, max_id = get_tweetid_range(tweets)
-  print("========= since id is", since_id, "/ max id is",  max_id)
+  # print("========= since id is", since_id, "/ max id is",  max_id)
   graf["since_id"] = since_id
   graf["max_id"] = max_id
   return graf
@@ -171,8 +171,8 @@ def fetchUser(user: str = "elonmusk", title: str = ""):
   print("Fetching @" + user)
   tweets = tweepy.Cursor(api.user_timeline, screen_name=user,
                          tweet_mode="extended").items(60)
-  ooo = dealWithTweets(tweets, username=False)
-  graf = graph.post(title=title, author='Twitter', text=" "+"".join(ooo))
+  output = dealWithTweets(tweets, username=False)
+  graf = graph.post(title=title, author='Twitter', text=" "+"".join(output))
   return graf
 
 @cached(cache=TTLCache(maxsize=1000, ttl=3600))
@@ -183,24 +183,24 @@ def fetchList(list_id: str, title: str = ''):
   tweets = tweepy.Cursor(api.list_timeline, list_id=list_id, tweet_mode="extended").items(60)
   #tweepy.Client.get_list_tweets(list_id, max_results=60)
   print(tweets)
-  ooo = dealWithTweets(tweets, username=True)
-  graf = graph.post(title=list_id, author='Twitter', author_url=f"https://twitter.com/i/lists/{list_id}", text=" "+"".join(ooo))
+  output = dealWithTweets(tweets, username=True)
+  graf = graph.post(title=list_id, author='Twitter', author_url=f"https://twitter.com/i/lists/{list_id}", text=" "+"".join(output))
   return graf
 
 @cached(cache=TTLCache(maxsize=50, ttl=200))
 def fetchTimeline(user: str = ""):
   tweets = api.home_timeline(tweet_mode="extended")
-  ooo = dealWithTweets(tweets, username=True)
-  graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(ooo))
+  output = dealWithTweets(tweets, username=True)
+  graf = graph.post(title="Neko_Timeline", author="Twitter", text=" "+''.join(output))
   return graf
 
 @cached(cache=TTLCache(maxsize=10, ttl=15))
 def fetchMentions(user: str = "lazy_static"):
   tweets = api.mentions_timeline(tweet_mode="extended")
-  ooo = dealWithTweets(tweets, username=True)
+  output = dealWithTweets(tweets, username=True)
   # get time
   hh_mm = time.strftime("%H %M", time.localtime())
-  graf = graph.post(title=f"neko mentions {hh_mm}", author="Twitter", text=" "+''.join(ooo))
+  graf = graph.post(title=f"neko mentions {hh_mm}", author="Twitter", text=" "+''.join(output))
   return graf
 
 def search(query, title: str = 'text'):
@@ -226,30 +226,30 @@ def dealWithTweets(tweets, **pa):
         bioInfo.append(userBio(t.user))
       else: # 不是用户 bio 页，故需要收集用户
         user_collect.append(t.user.screen_name)
-    htm = []
+    htmls = []
     twurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.id_str
-    htm.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")
+    htmls.append('<h4># <a href="' + twurl + '">' + t.id_str + "</h4>")
     if pa['username']:
-      htm.append("<p><b>" + t.user.name + "</b> (<code>@" + t.user.screen_name + "</code> · _<code>" + t.user.id_str + "</code>)</p>")
+      htmls.append("<p><b>" + t.user.name + "</b> (<code>@" + t.user.screen_name + "</code> · _<code>" + t.user.id_str + "</code>)</p>")
     # 判断是否是 reply
-    replyattr = getattr(t, 'in_reply_to_screen_name', None)
-    if replyattr is not None:
+    reply_attr = getattr(t, 'in_reply_to_screen_name', None)
+    if reply_attr is not None:
       if t.in_reply_to_screen_name == t.user.screen_name: #thread 我回复我自己
-        replurl = "https://twitter.com/" + t.user.screen_name + "/status/" + t.in_reply_to_status_id_str
-        repl = '<p><strong>↬</strong> # <a href="' + replurl + '">' + t.in_reply_to_status_id_str + "</a>"
+        reply_url = "https://twitter.com/" + t.user.screen_name + "/status/" + t.in_reply_to_status_id_str
+        reply_html = '<p><strong>↬</strong> # <a href="' + reply_url + '">' + t.in_reply_to_status_id_str + "</a>"
       else:
-        replurl = "https://twitter.com/" + t.in_reply_to_screen_name
+        reply_url = "https://twitter.com/" + t.in_reply_to_screen_name
         in_reply_to_status_id_str_attr = getattr(t, 'in_reply_to_status_id_str') # 被屏蔽这里就是 NoneType
         if in_reply_to_status_id_str_attr is not None:
-          replurl = replurl + "/status/" + t.in_reply_to_status_id_str
+          reply_url = reply_url + "/status/" + t.in_reply_to_status_id_str
           _in_reply_to_status_id_str =  t.in_reply_to_status_id_str #the text
         else:
           _in_reply_to_status_id_str = '@' + t.in_reply_to_screen_name #the text
-        repl = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name
-        repl += '</code> · _<code>' + t.in_reply_to_user_id_str
-        repl += '</code> : # <a href="' + replurl + '">'
-        repl += _in_reply_to_status_id_str + '</a>'
-      htm.append(repl)
+        reply_html = "<p><strong>↬</strong> <code>@" + t.in_reply_to_screen_name
+        reply_html += '</code> · _<code>' + t.in_reply_to_user_id_str
+        reply_html += '</code> : # <a href="' + reply_url + '">'
+        reply_html += _in_reply_to_status_id_str + '</a>'
+      htmls.append(reply_html)
 
     # deal with text
     status_text = ""
@@ -267,7 +267,7 @@ def dealWithTweets(tweets, **pa):
         else:
           r_status_text = rt.text
         status_text = f"RT {get_user_link(rt.user, True, True)}: " + r_status_text
-    htm.append("<p>" + tco(status_text) + r"</p>")
+    htmls.append("<p>" + tco(status_text) + r"</p>")
 
     # Image(s)
     if 'media' in t.entities:
@@ -276,7 +276,7 @@ def dealWithTweets(tweets, **pa):
         imgurls.append(" " + media['media_url'])
       graphimgurls = save_imgs(imgurls)
       graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]
-      htm.append("".join(graphimgshtml))
+      htmls.append("".join(graphimgshtml))
 
     # Save videos
     global current_tweet
@@ -292,15 +292,15 @@ def dealWithTweets(tweets, **pa):
         video_url = sorted_variants[0]["url"]
         vid_urls = save_vid(video_url) if is_ffmpeg_installed else [video_url]  # <- save_img(…)
         print(f"vid_urls: {', '.join(vid_urls)}")
-        htm.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption'
+        htmls.append("".join([f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video><figcaption'
                             f'>Video</figcaption></figure>' for vid_url in vid_urls]))
         # TODO: Move figure to its preview image
         # htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video>
         # <figcaption>Video</figcaption></figure>')
 
     date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
-    htm.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
-    output.append("".join(htm))
+    htmls.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
+    output.append("".join(htmls))
   db.logtweets([t._json for t in tweets])
   # 放在 for t in tweets:... 前就不行
   return ("".join(bioInfo) + "".join(output)).replace('\n', '<br>')
@@ -320,14 +320,14 @@ def pagesTweets(tweets, **pa):
 
 
 def userBio(userobj) -> str:
-  ooo = []
+  output = []
   u = userobj
-  htm = []
-  htm.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><p>ID: <code>_" + u.id_str + "</code></p>")
+  htmls = []
+  htmls.append("<h3>" + u.name + "</h3><code>@" + u.screen_name + "</code><p>ID: <code>_" + u.id_str + "</code></p>")
   if u.protected:
-    htm.append(" 🔒")
+    htmls.append(" 🔒")
   if u.verified:
-    htm.append(" ✔️")
+    htmls.append(" ✔️")
 
   if hasattr(u, "profile_banner_url"):
     print("Banner URL: " + u.profile_banner_url)
@@ -335,28 +335,28 @@ def userBio(userobj) -> str:
     # TODO: change banner pic name
     saved = save_img(u.profile_banner_url)
     if saved != "err":
-      htm.insert(0, f'<img src="{saved}">')
+      htmls.insert(0, f'<img src="{saved}">')
     else:
       print("Saving Banner ERR")
-  htm.append("<aside>" + u.description + "</aside>")
+  htmls.append("<aside>" + u.description + "</aside>")
 
   if False:#hasattr(u, "url"):
     print("has attr!", u.url)
     url = u.url
-    htm.append('🔗 <a href="' + url + '">' + url + '</a>')
+    htmls.append('🔗 <a href="' + url + '">' + url + '</a>')
   if not u.default_profile_image:
     profilepic = u.profile_image_url_https.replace("_normal", "") # original
     # other sizes:
     # https://stackoverflow.com/questions/34761622/how-to-get-users-high-resolution-profile-picture-on-twitter
     print("Avatar: " + profilepic)
-    htm.append('<img src="' + profilepic + '">')
+    htmls.append('<img src="' + profilepic + '">')
     # saved = save_img(u.profile_image_url_https.replace('_normal', "_original"))
     # htm.append('<img src="' + saved + '">')
-  htm.append(f'✏️ {str(u.statuses_count)}丨👥 {str(u.followers_count)}丨👁️ {str(u.friends_count)}丨♥️ {str(u.favourites_count)}<br>📆 {u.created_at}<hr>')
-  ooo.append("".join(htm))
-  ooo = "".join(ooo)
-  print(ooo)
-  return ooo
+  htmls.append(f'✏️ {str(u.statuses_count)}丨👥 {str(u.followers_count)}丨👁️ {str(u.friends_count)}丨♥️ {str(u.favourites_count)}<br>📆 {u.created_at}<hr>')
+  output.append("".join(htmls))
+  output = "".join(output)
+  print(output)
+  return output
 
 
 def p(text: str, title: str = "Logs"):
