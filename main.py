@@ -390,6 +390,19 @@ def del_cache(update, ctx):
 def clear():  # ???
     storage.clear_temp()
 
+import chatgpt
+def chat(update, ctx):
+    if any(update.message.text.startswith(x) for x in ["/clear", "/reset"]):
+        chatgpt.clear()
+        return
+    update.message.reply_text(
+        text=f"""_ChatGPT 正在思考……_""",
+        parse_mode=telegram.ParseMode.MARKDOWN_V2,
+        quote=True
+        ).edit_text(
+        text=chatgpt.ask(cutcmd(update.message.text)),
+        # parse_mode=telegram.ParseMode.MARKDOWN_V2
+    )
 
 start_handler = CommandHandler('start', start, run_async=True)
 clear_handler = CommandHandler('clear', clear, run_async=True)
@@ -418,12 +431,13 @@ photo_handler = MessageHandler(Filters.photo & Filters.chat_type.private,
 video_handler = CommandHandler(["vid", "video", "annie"], download_video,
                                filters=~Filters.update.edited_message, run_async=False)
 clear_handler = CommandHandler('clear', del_cache, run_async=False)
+chat_handler = CommandHandler(['chat', "chatpgt", "gpt", "reset", "clearchat", "cleargpt", "ai"], chat, run_async=False)
 
 handlers = [
     start_handler, clear_handler, favs_handler, user_handler, mentions_handler, list_handler, timeline_handler,
     # search_handler,
     duty_handler, userduty_handler, followings_handler, ping_handler, textile_handler, message_handler, file_handler,
-    voice_handler, photo_handler, video_handler, clear_handler
+    voice_handler, photo_handler, video_handler, clear_handler, chat_handler
 ]
 
 for handler in handlers:
