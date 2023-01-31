@@ -7,7 +7,7 @@ import requests
 import db
 import pagination
 import json
-import select
+import selec
 import ffm
 from typing import Optional, Dict, List, Tuple, Union
 from tweets import *

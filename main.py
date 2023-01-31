@@ -20,12 +20,13 @@ from ffm import is_ffmpeg_installed
 load_dotenv()  # graph.py requires env
 import storage
 import graph
+import sys
+from termcolor import colored, cprint
 
 logger = logging.getLogger(__name__)
 
 logger.info("Starting up...")
-is_ffmpeg_installed() or logger.warning("ffmpeg is not installed. Video archiving will not work.")
-
+is_ffmpeg_installed() or cprint("`ffmpeg` is not installed. Video archiving will not work.", "red", attrs=["bold"], file=sys.stderr)
 
 def log(_path, _user, _type, _query):
     r = requests.post(
@@ -382,9 +383,10 @@ def download_video(update, ctx):
 # TODO: 错误处理
 
 def del_cache(update, ctx):
+    pre = storage.get_disk_usage("./")
     storage.rm("./temp")
     storage.mkdir("./temp")
-    update.message.reply_text("Alle klar!\n" + storage.get_disk_usage("./"))
+    update.message.reply_text("Alle klar!\n" + pre + "\n" + storage.get_disk_usage("./"))
 
 
 def clear():  # ???

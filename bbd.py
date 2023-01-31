@@ -1,0 +1,56 @@
+from subprocess import run
+import time
+from os import listdir
+from os.path import isfile, join
+from result import Ok, Err, Result
+
+tok = "𖩏"
+
+file_pattern = ["<aid>", "<videoTitle>", "<aid>", "<cid>", "<fps>", "<ownerMid>"]
+"""
+<videoTitle>: 视频主标题
+<pageNumber>: 视频分P序号
+<pageNumberWithZero>: 视频分P序号(前缀补零)
+<pageTitle>: 视频分P标题
+<aid>: 视频aid
+<cid>: 视频cid
+<dfn>: 视频清晰度
+<res>: 视频分辨率
+<fps>: 视频帧率
+<videoCodecs>: 视频编码
+<videoBandwidth>: 视频码率
+<audioCodecs>: 音频编码
+<audioBandwidth>: 音频码率
+<ownerName>: 上传者名称
+<ownerMid>: 上传者mid
+"""
+file_pattern = tok.join(file_pattern)
+print(file_pattern)
+
+escape = lambda x: f'"{x}"'
+
+
+def download(video):
+    timestamp = str(time.time_ns())
+    temp_dir = "temp/bb" + timestamp
+    cmd = f"""mkdir {temp_dir}
+{" ".join(["BBDown", video, "--encoding-priority", "hevc", "--work-dir", escape(temp_dir), "--file-pattern", escape(file_pattern)])}"""
+    print(cmd)
+    timestamp = None
+    res = run(
+        cmd,
+        capture_output=True,
+        shell=True,
+    )
+    if res.returncode != 0:
+        return Err(res.returncode)
+    files = [f for f in listdir(temp_dir) if isfile(join(temp_dir, f))]
+    if not (files and files[0].endswith(".mp4")):
+        return Err(files)
+    fname = files[0][:-4]
+    print(fname)
+    # run(" ".join(["rm", "-r", temp_dir]), capture_output=True, shell=True)
+    return Ok(fname)
+
+
+download("https://www.bilibili.com/video/BV1vY411U7Kx/?")

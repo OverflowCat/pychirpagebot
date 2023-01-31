@@ -1,4 +1,6 @@
+__pypackages__/*
 .env
+*.lock
 __pycache__/*
 *.pyc
 temp/*
