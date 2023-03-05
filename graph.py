@@ -5,7 +5,6 @@ import storage
 import tweepy
 import requests
 import db
-import pagination
 import json
 import selec
 import ffm
@@ -340,7 +339,7 @@ def userBio(userobj) -> str:
       print("Saving Banner ERR")
   htmls.append("<aside>" + u.description + "</aside>")
 
-  if False:#hasattr(u, "url"):
+  if False: #hasattr(u, "url"):
     print("has attr!", u.url)
     url = u.url
     htmls.append('🔗 <a href="' + url + '">' + url + '</a>')

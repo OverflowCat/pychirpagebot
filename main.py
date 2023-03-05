@@ -22,13 +22,17 @@ import os
 import re
 import telegram
 from dotenv import load_dotenv
-from ffm import is_ffmpeg_installed
-
 load_dotenv()  # graph.py requires env
+
+from ffm import is_ffmpeg_installed
 import storage
 import graph
 import sys
 from termcolor import colored, cprint
+
+import openai
+
+openai.api_key = os.getenv("OPENAI2")
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +60,12 @@ def log(_path, _user, _type, _query):
     )
     return r.json()
 
-def cutcmd(msg_txt): # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
+
+def cutcmd(msg_txt):  # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
     seps = msg_txt.split(" ")
     seps.pop(0)
     return " ".join(seps).strip()
+
 
 myfllwings = []
 
@@ -68,6 +74,7 @@ application = ApplicationBuilder().token(os.environ["chirpage"]).build()
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
+
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await ctx.bot.send_message(
@@ -238,7 +245,7 @@ def favs_users(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def dutymachine(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_markdown(
+    await update.message.reply_text(
         "Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command."
     )
     """
@@ -328,18 +335,43 @@ async def file_keeper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     siz_mb = siz / 1024.0**2
     print(f"File size is {siz_mb} MB")
     if siz_mb >= 5:
-        await msg.reply_text(
-            r"_Your file exceeds the limit of *5MB*\._", parse_mode="Markdown"
-        )
+        await msg.reply_markdown_v2(r"_Your file exceeds the limit of *5MB*\._")
     else:
-        file = bot.getFile(update.message.document.file_id)
+        file = ctx.bot.getFile(update.message.document.file_id)
         graph_file = graph.save_img(file.file_path)
         await msg.reply_text(text=str(format(siz_mb, ".2f")) + "MB\n" + graph_file)
 
 
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    if reg.is_status(text):
+    quote = update.message.reply_to_message or None
+    if quote and quote.from_user.id == 827065789 and " tokens" in quote.text:
+        print("=== 会话 ===", {"q": quote.from_user.id, "t": quote.text})
+        lines = quote.text.splitlines()
+        del lines[-2:]
+        prev_resp = "\n".join(lines)  # 删除上次回复最后的 token 数量统计
+
+        resp = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "assistant", "content": prev_resp},
+                {"role": "user", "content": text},
+            ],
+        )
+        print(resp["usage"])
+        generated = resp["choices"][0]["message"]["content"]
+        calc = f"{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens"
+        try:
+            await update.message.reply_markdown(
+                generated + f"\n\n__{calc}__",
+                quote=True,
+            )
+        except:  # Markdown 可能无法 parse
+            await update.message.reply_text(
+                generated + f"\n\n{calc}",
+                quote=True,
+            )
+    elif reg.is_status(text):
         regf = re.findall(r"com\/@?[a-zA-Z0-9_]+\/status", text)[0]
         spl = regf.split(r"/")
         user = spl[1]
@@ -376,9 +408,7 @@ This process will be finished in several minutes, for we have supported archivin
 
 async def download_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     bot = ctx.bot
-    sent_message = await update.message.reply_text(
-        "Now downloading video…", parse_mode="MarkdownV2"
-    )
+    sent_message = await update.message.reply_text("Now downloading video…")
     url = cutcmd(update.message.text)  # .lower() Bilibili 的 BV 号是区分大小写的！！
     storage.mkdir("/pan/annie/temp/")
     fid = reg.id_generator(4)
@@ -418,11 +448,6 @@ def clear():  # ???
     storage.clear_temp()
 
 
-import openai
-
-openai.api_key = os.getenv("OPENAI")
-
-
 async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     prompt = cutcmd(update.message.text)
     print("Asking", prompt + "…")
@@ -437,16 +462,15 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
     print(resp["usage"])
     generated = resp["choices"][0]["message"]["content"]
+    calc = f"{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens"
     try:
         await update.message.reply_markdown(
-            generated
-            + f"\n\n__{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens__",
+            generated + f"\n\n__{calc}__",
             quote=True,
         )
     except:  # Markdown 可能无法 parse
         await update.message.reply_text(
-            generated
-            + f"\n\n{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens",
+            generated + f"\n\n{calc}",
             quote=True,
         )
 
@@ -467,7 +491,6 @@ userduty_handler = CommandHandler("userduty", userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler("ping", ping)
 textile_handler = CommandHandler("textile", textile_graph)
-message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
 file_handler = MessageHandler(
     filters.Document.IMAGE & filters.ChatType.PRIVATE, file_keeper
 )
@@ -480,6 +503,7 @@ video_handler = CommandHandler(
 )
 clear_handler = CommandHandler("clear", del_cache)
 ai_handler = CommandHandler(["wen", "man", "ask", "ai"], ask_ai, block=False)
+message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
 
 handlers = [
     start_handler,
