@@ -1,5 +1,13 @@
 from telegram import Update
-from telegram.ext import MessageHandler, CommandHandler, Updater, ApplicationBuilder, ContextTypes, CommandHandler, filters
+from telegram.ext import (
+    MessageHandler,
+    CommandHandler,
+    Updater,
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    filters,
+)
 import logging
 import requests
 from datetime import datetime
@@ -48,40 +56,30 @@ def log(_path, _user, _type, _query):
     )
     return r.json()
 
-
-# cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
-
-
-def cutcmd(msg_txt):
+def cutcmd(msg_txt): # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
     seps = msg_txt.split(" ")
     seps.pop(0)
     return " ".join(seps).strip()
-
-
-# return re.sub(cmdre, "", msg_txt)
-
 
 myfllwings = []
 
 application = ApplicationBuilder().token(os.environ["chirpage"]).build()
 
-
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
-
-def start(update: Update, context):
-    context.bot.send_message(
+async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="""Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
 		You can also forward voice messages to me to get the file sizes of them.
 		Duty Machine service is temporarily down due to GitHub's term of service.""",
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
-def arc_favs(update, ctx):
+async def arc_favs(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text).lower()
     _t = text.lower()
@@ -89,7 +87,7 @@ def arc_favs(update, ctx):
         if update.effective_chat.id == (1000 * (2061 + math.pow(2, 16)) + 97) * 6:
             text = "lazy_static"
         else:
-            update.message.reply_markdown("Please specify a username.")
+            await update.message.reply_markdown("Please specify a username.")
             return
         # text = "elonmusk"
     elif _t == "lazy_static":
@@ -97,25 +95,25 @@ def arc_favs(update, ctx):
             return
     _t = None
 
-    sent_msg = ctx.bot.send_message(
+    sent_msg = await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Now fetching @"
         + text
         + "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
-        parse_mode=telegram.ParseMode.HTML,
+        parse_mode=ParseMode.HTML,
     )
     graf = graph.fetchFavs(text)
     # log(graf, "favs", text, "lazy_static" + ':favs')
-    sent_msg.edit_text(
-        text="*" + text + "*\n" + graf["url"], parse_mode=telegram.ParseMode.MARKDOWN
+    await sent_msg.edit_text(
+        text="*" + text + "*\n" + graf["url"], parse_mode=ParseMode.MARKDOWN
     )
     print(graf)
 
 
-def arc_user(update, ctx, cmd=True):
+async def arc_user(update: Update, ctx, cmd=True):
     text = cutcmd(update.message.text) if cmd else update.message.text
     if text == "":
-        update.message.reply_markdown("Please specify a username.")
+        await update.message.reply_markdown("Please specify a username.")
         return
     if "twitter.com" not in text or "vxtwitter.com" not in text:
         if reg.is_valid_twitter_username(text) or reg.is_valid_as_twitter_username(
@@ -123,11 +121,12 @@ def arc_user(update, ctx, cmd=True):
         ):
             pass
         else:
-            update.message.reply_markdown(
+            await update.message.reply_markdown(
                 'The username you provided is not valid. A valid one consists of only alphanumeric letters and "_"s.'
             )
+            return
     else:
-        ctx.bot.send_message(
+        await ctx.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Please input a valid twitter username rather than a link, which contains alphanumeric letters and "
             '"_"s only.',
@@ -135,43 +134,42 @@ def arc_user(update, ctx, cmd=True):
         return
     text = text.split("/")[-1]
     splited = text.split(" as ")
-    title = ""
-    as_what = ""
+    title, as_what = "", ""
     if splited != [text]:
         title = splited[1]
         as_what = " as " + title
-    sent_msg = ctx.bot.send_message(
+    sent_msg = await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support "
         f"archiving large videos now.</i>",
-        parse_mode=telegram.ParseMode.HTML,
+        parse_mode=ParseMode.HTML,
     )
     graf = graph.fetchUser(text, title=title)
     log(graf, text, "user", text + ":timeline")
     sent_msg.edit_text(
-        text="<b>" + text + "</b>\n" + graf["url"], parse_mode=telegram.ParseMode.HTML
+        text="<b>" + text + "</b>\n" + graf["url"], parse_mode=ParseMode.HTML
     )
     print(graf)
 
 
-def arc_timeline(update, ctx):
-    sent_msg = ctx.bot.send_message(
+async def arc_timeline(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    sent_msg = await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Now fetching timeline tweets…",
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
     graf = graph.fetchTimeline()
     log(graf, "tl", "timeline", "lazy_static" + ":favs")
     sent_msg.edit_text(
         text="*" + " Timeline tweets" + "*\n" + graf["url"],
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
 list_reg = r"^(https?://)?([a-zA-Z.]+\.)?twitter\.com/i/lists/[0-9]+"
 
 
-def arc_list(update, ctx):
+async def arc_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     list_id = "1496265153821745158"
     text = update.message.text
     if text.startswith("/"):
@@ -179,13 +177,10 @@ def arc_list(update, ctx):
         # if text.isdigit():
         if text.isdigit():
             list_id = text
-    # 		else:
-    # 			update.message.reply_markdown("Please specify a list ID.")
-    # 			return
     else:
         res = list_reg.search(text)
         if res is None:
-            update.message.reply_markdown("Please specify a list ID.")
+            await update.message.reply_markdown("Please specify a list ID.")
             return
         else:
             clean_link = res.group(0)
@@ -194,33 +189,33 @@ def arc_list(update, ctx):
             if _list_id.length > 1:
                 list_id = _list_id
             print("list_id:", list_id)
-    sended_msg = ctx.bot.send_message(
+    sended_msg = await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"Now fetching list {list_id}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
-        parse_mode=telegram.ParseMode.HTML,
+        parse_mode=ParseMode.HTML,
     )
     graf = graph.fetchList(list_id)
 
-    sended_msg.edit_text(
+    await sended_msg.edit_text(
         text="*" + " Archived tweets" + "*\n" + graf["url"],
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
-def arc_mentions(update, ctx):
-    sended_msg = ctx.bot.send_message(
+async def arc_mentions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    sended_msg = await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Now fetching mentions…\n",
-        parse_mode=telegram.ParseMode.HTML,
+        parse_mode=ParseMode.HTML,
     )
     graf = graph.fetchMentions()
     log(graf, "mentions", "mentions", "lazy_static" + ":favs")
-    sended_msg.edit_text(
-        text="*Mentions tweets*\n" + graf["url"], parse_mode=telegram.ParseMode.MARKDOWN
+    await sended_msg.edit_text(
+        text="*Mentions tweets*\n" + graf["url"], parse_mode=ParseMode.MARKDOWN
     )
 
 
-def search_tweets(update, ctx):
+def search_tweets(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text)
     graf = graph.search(text, title=text)
@@ -228,21 +223,22 @@ def search_tweets(update, ctx):
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="*" + text + "*\n" + graf["url"],
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
-def single_tweet(update, ctx):
+def single_tweet(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text)
+    # UNIMPLEMENTED
 
 
-def favs_users(update, ctx):
+def favs_users(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     pass
 
 
-def dutymachine(update, ctx):
-    update.message.reply_markdown(
+async def dutymachine(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_markdown(
         "Sorry, duty machine service is temporarily down. If you want to archive tweets, please send Twitter link without any command."
     )
     """
@@ -256,15 +252,15 @@ def dutymachine(update, ctx):
 	ctx.bot.send_message(
 		chat_id=update.effective_chat.id,
 		text="`" + text + "`\n" + resp,
-		parse_mode=telegram.ParseMode.MARKDOWN)
+		parse_mode=ParseMode.MARKDOWN)
 	"""
 
 
-def ping(update, ctx):
-    ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
+async def ping(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
 
 
-def userduty(update, ctx):
+def userduty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text)
     graf = graph.fetchUser(text)
@@ -273,16 +269,16 @@ def userduty(update, ctx):
     ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="`" + text + "`\n" + resp,
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
-def textile_graph(update, ctx):
+async def textile_graph(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     graf = publish.txtile(cutcmd(update.message.text))
-    update.message.reply_markdown("`" + reg.escape(graf) + "`")
+    await update.message.reply_markdown("`" + reg.escape(graf) + "`")
 
 
-def followings(update, ctx):
+def followings(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = cutcmd(update.message.text)
     fllwings = []
     tweepy = graph.getTweepy()
@@ -304,44 +300,44 @@ def followings(update, ctx):
     ctx.bot.send_message(chat_id=update.effective_chat.id, text=resu["url"])
 
 
-def voice_listener(update, ctx):
+async def voice_listener(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     voi = update.message.voice
-    ctx.bot.send_message(
+    await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"*Voice data*\n\nVoice file ID: `{voi.file_id}`\nUnique ID: `{voi.file_unique_id}`\nDuration: {voi.duration} sec(s)\nFile type: `{voi.mime_type}`\nFile size: {round(voi.file_size / 1024, 2)}KB",
-        parse_mode=telegram.ParseMode.MARKDOWN,
+        parse_mode=ParseMode.MARKDOWN,
     )
 
 
-def photo_uploader(update, ctx):
-    msg = update.message
+async def photo_uploader(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    bot = ctx.bot
     file = bot.getFile(update.message.photo[-1].file_id)
     graph_file = graph.save_img(file.file_path)
 
-    bot.send_message(chat_id=update.effective_chat.id, text=graph_file)
+    await bot.send_message(chat_id=update.effective_chat.id, text=graph_file)
 
 
 # DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
 # According to the documentation, link may expire after 1 h.
 
 
-def file_keeper(update, ctx):
+async def file_keeper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     # print(update.message)
     msg = update.message
     siz = msg.document.file_size
     siz_mb = siz / 1024.0**2
     print(f"File size is {siz_mb} MB")
     if siz_mb >= 5:
-        msg.reply_text(
+        await msg.reply_text(
             r"_Your file exceeds the limit of *5MB*\._", parse_mode="Markdown"
         )
     else:
         file = bot.getFile(update.message.document.file_id)
         graph_file = graph.save_img(file.file_path)
-        msg.reply_text(text=str(format(siz_mb, ".2f")) + "MB\n" + graph_file)
+        await msg.reply_text(text=str(format(siz_mb, ".2f")) + "MB\n" + graph_file)
 
 
-def plain_msg(update, ctx):
+async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if reg.is_status(text):
         regf = re.findall(r"com\/@?[a-zA-Z0-9_]+\/status", text)[0]
@@ -350,22 +346,22 @@ def plain_msg(update, ctx):
         if user.startswith("@"):
             user = user[1:]
         print("User in link: " + user)
-        sent_msg = update.message.reply_text(
+        sent_msg = await update.message.reply_text(
             text=f"""Found user in link: @{user}
 This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
             quote=True,
         )
         graf = graph.fetchUser(user, title=user)
         log(graf, user, "user", text + ":timeline")
-        sent_msg.edit_text(
+        await sent_msg.edit_text(
             text="Got user from link: " + user + "\n" + graf["url"],
-            parse_mode=telegram.ParseMode.HTML,
+            parse_mode=ParseMode.HTML,
         )
         print(graf)
     elif reg.is_list(text):
-        arc_list(update, ctx)
+        await arc_list(update, ctx)
     elif reg.is_user_profile_page(text):
-        arc_user(update, ctx, cmd=False)
+        await arc_user(update, ctx, cmd=False)
     elif reg.is_duty(text):
         dutymachine(update, ctx)
         """
@@ -374,12 +370,13 @@ This process will be finished in several minutes, for we have supported archivin
         ctx.bot.send_message(
             chat_id=update.effective_chat.id,
             text="`" + text + "`\n" + resp,
-            parse_mode=telegram.ParseMode.MARKDOWN)
+            parse_mode=ParseMode.MARKDOWN)
         """
 
 
-def download_video(update, ctx):
-    sent_message = update.message.reply_text(
+async def download_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    bot = ctx.bot
+    sent_message = await update.message.reply_text(
         "Now downloading video…", parse_mode="MarkdownV2"
     )
     url = cutcmd(update.message.text)  # .lower() Bilibili 的 BV 号是区分大小写的！！
@@ -394,8 +391,8 @@ def download_video(update, ctx):
     files = os.listdir(f"/pan/annie/temp/{fid}/")
     for f in files:
         location = f"/pan/annie/temp/{fid}/{f}"
-        sent_message.edit_text(f"Location: {location}")
-        bot.send_video(
+        await sent_message.edit_text(f"Location: {location}")
+        await bot.send_video(
             chat_id=update.message.chat_id,
             video=open(location, "rb"),
             supports_streaming=True,
@@ -408,11 +405,11 @@ def download_video(update, ctx):
 # TODO: 错误处理
 
 
-def del_cache(update, ctx):
+async def del_cache(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     pre = storage.get_disk_usage("./")
     storage.rm("./temp")
     storage.mkdir("./temp")
-    update.message.reply_text(
+    await update.message.reply_text(
         "Alle klar!\n" + pre + "\n" + storage.get_disk_usage("./")
     )
 
@@ -426,7 +423,7 @@ import openai
 openai.api_key = os.getenv("OPENAI")
 
 
-def ask_ai(update, ctx):
+async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     prompt = cutcmd(update.message.text)
     print("Asking", prompt + "…")
     resp = openai.ChatCompletion.create(
@@ -439,48 +436,50 @@ def ask_ai(update, ctx):
         ],
     )
     print(resp["usage"])
-    generated = f"""{resp["choices"][0]["message"]["content"]}
-    
-    __{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens__"""
-    update.message.reply_markdown(generated, quote=True)
+    generated = resp["choices"][0]["message"]["content"]
+    try:
+        await update.message.reply_markdown(
+            generated
+            + f"\n\n__{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens__",
+            quote=True,
+        )
+    except:  # Markdown 可能无法 parse
+        await update.message.reply_text(
+            generated
+            + f"\n\n{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens",
+            quote=True,
+        )
 
 
 start_handler = CommandHandler("start", start)
 clear_handler = CommandHandler("clear", clear)
-favs_handler = CommandHandler(["favs", "fav"], arc_favs)
-user_handler = CommandHandler(["user", "twitter"], arc_user)
+favs_handler = CommandHandler(["favs", "fav"], arc_favs, block=False)
+user_handler = CommandHandler(["user", "twitter"], arc_user, block=False)
 mentions_handler = CommandHandler(
-    ["mentions", "mention", "men"], arc_mentions
+    ["mentions", "mention", "men"], arc_mentions, block=False
 )
-list_handler = CommandHandler(["list", "li"], arc_list)
-timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline)
+list_handler = CommandHandler(["list", "li"], arc_list, block=False)
+timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline, block=False)
 # command: Union[str, List[str], Tuple[str, ...]]
 search_handler = CommandHandler("search", search_tweets)
-duty_handler = CommandHandler(
-    ["duty", "dm", "dutymachine"], dutymachine
-)
+duty_handler = CommandHandler(["duty", "dm", "dutymachine"], dutymachine)
 userduty_handler = CommandHandler("userduty", userduty)
 followings_handler = CommandHandler("followings", followings)
 ping_handler = CommandHandler("ping", ping)
 textile_handler = CommandHandler("textile", textile_graph)
-message_handler = MessageHandler(
-    filters.TEXT & (~filters.COMMAND), plain_msg
-)
+message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
 file_handler = MessageHandler(
     filters.Document.IMAGE & filters.ChatType.PRIVATE, file_keeper
 )
-voice_handler = MessageHandler(
-    filters.VOICE & filters.ChatType.PRIVATE, voice_listener
-)
-photo_handler = MessageHandler(
-    filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader
-)
+voice_handler = MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, voice_listener)
+photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
 video_handler = CommandHandler(
-    ["vid", "video", "annie"],    download_video,
+    ["vid", "video", "annie"],
+    download_video,
     # filters=(~ filters.Update.EDITED_MESSAGE),
 )
 clear_handler = CommandHandler("clear", del_cache)
-ai_handler = CommandHandler("ask", ask_ai)
+ai_handler = CommandHandler(["wen", "man", "ask", "ai"], ask_ai, block=False)
 
 handlers = [
     start_handler,
@@ -506,16 +505,8 @@ handlers = [
 ]
 
 for handler in handlers:
-    # Python 3's map function is lazy, unlike Python 2's map.
-    # You have to consume it somehow: list(map(...))
-    # or just use for loop:
     application.add_handler(handler)
 
-""" j = updater.job_queue
-def news_update(context):
-    context.bot.send_message(chat_id=-1001667910766, text="I'm alive!")
-j.run_repeating(news_update, interval=10)
- """
 # 拉清单
 logger.info("Bot started.")
 application.run_polling()
