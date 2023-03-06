@@ -2,26 +2,25 @@ from telegram import Update
 from telegram.ext import (
     MessageHandler,
     CommandHandler,
-    Updater,
     ApplicationBuilder,
     ContextTypes,
     CommandHandler,
     filters,
 )
+from telegram.helpers import escape_markdown
 import logging
 import requests
 from datetime import datetime
 from telegram.constants import ParseMode
 import math
 import publish
-import json
-import db
 import reg
+from reg import cutcmd
 import duty
 import os
 import re
-import telegram
 from dotenv import load_dotenv
+
 load_dotenv()  # graph.py requires env
 
 from ffm import is_ffmpeg_installed
@@ -30,9 +29,7 @@ import graph
 import sys
 from termcolor import colored, cprint
 
-import openai
-
-openai.api_key = os.getenv("OPENAI2")
+from ai import ask_ai, respond_to_ai
 
 logger = logging.getLogger(__name__)
 
@@ -59,12 +56,6 @@ def log(_path, _user, _type, _query):
         },
     )
     return r.json()
-
-
-def cutcmd(msg_txt):  # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
-    seps = msg_txt.split(" ")
-    seps.pop(0)
-    return " ".join(seps).strip()
 
 
 myfllwings = []
@@ -282,7 +273,7 @@ def userduty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def textile_graph(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     graf = publish.txtile(cutcmd(update.message.text))
-    await update.message.reply_markdown("`" + reg.escape(graf) + "`")
+    await update.message.reply_markdown("`" + escape_markdown(graf) + "`")
 
 
 def followings(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -343,35 +334,10 @@ async def file_keeper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if await respond_to_ai(update, ctx):
+        return
     text = update.message.text
-    quote = update.message.reply_to_message or None
-    if quote and quote.from_user.id == 827065789 and " tokens" in quote.text:
-        print("=== 会话 ===", {"q": quote.from_user.id, "t": quote.text})
-        lines = quote.text.splitlines()
-        del lines[-2:]
-        prev_resp = "\n".join(lines)  # 删除上次回复最后的 token 数量统计
-
-        resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "assistant", "content": prev_resp},
-                {"role": "user", "content": text},
-            ],
-        )
-        print(resp["usage"])
-        generated = resp["choices"][0]["message"]["content"]
-        calc = f"{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens"
-        try:
-            await update.message.reply_markdown(
-                generated + f"\n\n__{calc}__",
-                quote=True,
-            )
-        except:  # Markdown 可能无法 parse
-            await update.message.reply_text(
-                generated + f"\n\n{calc}",
-                quote=True,
-            )
-    elif reg.is_status(text):
+    if reg.is_status(text):
         regf = re.findall(r"com\/@?[a-zA-Z0-9_]+\/status", text)[0]
         spl = regf.split(r"/")
         user = spl[1]
@@ -446,33 +412,6 @@ async def del_cache(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 def clear():  # ???
     storage.clear_temp()
-
-
-async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    prompt = cutcmd(update.message.text)
-    print("Asking", prompt + "…")
-    resp = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            # {"role": "system", "content": "You are a helpful assistant."},
-            # {"role": "user", "content": "Who won the world series in 2020?"},
-            # {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-            {"role": "user", "content": prompt}
-        ],
-    )
-    print(resp["usage"])
-    generated = resp["choices"][0]["message"]["content"]
-    calc = f"{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens"
-    try:
-        await update.message.reply_markdown(
-            generated + f"\n\n__{calc}__",
-            quote=True,
-        )
-    except:  # Markdown 可能无法 parse
-        await update.message.reply_text(
-            generated + f"\n\n{calc}",
-            quote=True,
-        )
 
 
 start_handler = CommandHandler("start", start)
