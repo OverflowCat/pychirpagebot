@@ -1,47 +1,31 @@
 [tool.poetry]
 name = "chirpage"
-version = "0.1.0"
+version = "5.2.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["OverflowCat <overflowcat@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
 html-telegraph-poster = "^0.5.0"
-
-gspread = "^3.6.0"
+gspread = "^5.7.2"
 python-dotenv = "^0.14.0"
-python-telegram-bot = "^20.1"
+python-telegram-bot = { extras = ["all"], version = "^20.1" }
 Pillow = "^9.4.0"
 python-bidi = "^0.4.2"
 pysos = "^1.2.1"
 schedule = "^0.6.0"
 tinydb = "^4.7.0"
-msgpack = "^1.0.2"
 PyMySQL = "^1.0.2"
 tweepy = "^4.6.0"
 textile = "^4.0.2"
-cachetools = "^4.2.2"
 termcolor = "^2.2.0"
 openai = "^0.27.0"
 duckduckgo-search = "^2.8.1"
+cachetools = "^5.3.0"
 
-[tool.poetry.dev-dependencies]
-
-
-[tool.pdm]
-[tool.pdm.dev-dependencies]
-dev = []
-
-[tool.pdm.build]
-includes = []
-[build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
 
 [project]
-authors = [
-    {name = "Your Name", email = "you@example.com"},
-]
+authors = [{ name = "OverflowCat", email = "overflowcat@gmail.com" }]
 requires-python = ">=3.8,<4.0"
 dependencies = [
     "html-telegraph-poster<1.0.0,>=0.2.0",
@@ -53,7 +37,6 @@ dependencies = [
     "pysos<2.0.0,>=1.2.1",
     "schedule<1.0.0,>=0.6.0",
     "tinydb<5.0.0,>=4.7.0",
-    "msgpack<2.0.0,>=1.0.2",
     "PyMySQL<2.0.0,>=1.0.2",
     "tweepy<5.0.0,>=4.6.0",
     "textile<5.0.0,>=4.0.2",

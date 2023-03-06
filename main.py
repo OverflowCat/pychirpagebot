@@ -334,6 +334,7 @@ async def file_keeper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    if not update.message or update.message.text: return
     if await respond_to_ai(update, ctx):
         return
     text = update.message.text
@@ -472,4 +473,4 @@ for handler in handlers:
 
 # 拉清单
 logger.info("Bot started.")
-application.run_polling()
+application.run_webhook()

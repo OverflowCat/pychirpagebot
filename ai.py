@@ -101,7 +101,7 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    quote = update.message and update.message.reply_to_message or None
+    quote = update.message.reply_to_message or None
     if not (
         quote and quote.from_user.id == 827065789 and quote.text.endswith(" tokens")
     ):
