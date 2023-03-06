@@ -3,10 +3,12 @@ from pathlib import Path
 import subprocess
 from typing import Optional, List
 
+
 Path("temp/_rubbish").mkdir(parents=True, exist_ok=True)
 
 
 def split(path: str, size: Optional[int] = None) -> List[str]:
+    # determine splited video count
     splits = 0
     if size is None:
         size = os.path.getsize(path) / 1024.0 / 1000.0
@@ -27,7 +29,8 @@ def split(path: str, size: Optional[int] = None) -> List[str]:
     # ffmpeg
     print(subprocess.run("pwd"))
     result = os.system(
-        f'ffmpeg -i "{path}" -c copy -f segment -segment_time {str(duration)} "temp/{folder_name}/output%d{fformat}"')
+        f'ffmpeg -i "{path}" -c copy -f segment -segment_time {str(duration)} "temp/{folder_name}/output%d{fformat}"'
+    )
     # result = subprocess.run(["ffmpeg", "-i", path, "-c copy -f segment", "-segment_time",    str(duration), f"temp/{folder_name}/output%d{fformat}"],    stdout=subprocess.PIPE,    stderr=subprocess.STDOUT)
     print(result)
     return [f"temp/{folder_name}/{x}" for x in os.listdir("temp/" + folder_name)]
@@ -35,11 +38,20 @@ def split(path: str, size: Optional[int] = None) -> List[str]:
 
 
 def get_duration(path: str) -> float:
-    result = subprocess.run(["ffprobe", "-v", "error", "-show_entries",
-                             "format=duration", "-of",
-                             "default=noprint_wrappers=1:nokey=1", path],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            path,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     return float(result.stdout)  # MB
 
 
@@ -48,7 +60,9 @@ def get_duration(path: str) -> float:
 
 def is_ffmpeg_installed() -> bool:
     try:
-        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        subprocess.run(
+            ["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
         return True
     except FileNotFoundError:
         return False

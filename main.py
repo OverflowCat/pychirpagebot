@@ -441,7 +441,7 @@ video_handler = CommandHandler(
     # filters=(~ filters.Update.EDITED_MESSAGE),
 )
 clear_handler = CommandHandler("clear", del_cache)
-ai_handler = CommandHandler(["wen", "man", "ask", "ai"], ask_ai, block=False)
+ai_handler = CommandHandler(["wen", "man", "ask", "ai", "net", "netzh"], ask_ai, block=False)
 message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
 
 handlers = [

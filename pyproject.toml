@@ -23,6 +23,7 @@ textile = "^4.0.2"
 cachetools = "^4.2.2"
 termcolor = "^2.2.0"
 openai = "^0.27.0"
+duckduckgo-search = "^2.8.1"
 
 [tool.poetry.dev-dependencies]
 
