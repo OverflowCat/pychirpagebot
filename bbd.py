@@ -1,8 +1,8 @@
 from subprocess import run
 import time
-from os import listdir
-from os.path import isfile, join
+from pathlib import Path
 from result import Ok, Err, Result
+from rich import print
 
 tok = "𖩏"
 
@@ -31,6 +31,7 @@ escape = lambda x: f'"{x}"'
 
 
 def download(video):
+    print(f"[bold blue]Start downloading {video}...[/bold blue]")
     timestamp = str(time.time_ns())
     temp_dir = "temp/bb" + timestamp
     cmd = f"""mkdir {temp_dir}
@@ -44,13 +45,16 @@ def download(video):
     )
     if res.returncode != 0:
         return Err(res.returncode)
-    files = [f for f in listdir(temp_dir) if isfile(join(temp_dir, f))]
-    if not (files and files[0].endswith(".mp4")):
+
+    files = [f for f in Path(temp_dir).iterdir() if f.is_file()]
+    if not (files and files[0].suffix == ".mp4"):
         return Err(files)
-    fname = files[0][:-4]
+    fname = files[0]
+    # files = [f for f in listdir(temp_dir) if isfile(join(temp_dir, f))]
+    # if not (files and files[0].endswith(".mp4")):
+    #     return Err(files)
+    # fname = files[0][:-4]
+
     print(fname)
     # run(" ".join(["rm", "-r", temp_dir]), capture_output=True, shell=True)
     return Ok(fname)
-
-
-download("https://www.bilibili.com/video/BV1vY411U7Kx/?")

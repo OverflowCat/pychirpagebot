@@ -8,30 +8,32 @@ authors = ["OverflowCat <overflowcat@gmail.com>"]
 python = "^3.8"
 html-telegraph-poster = "^0.5.0"
 gspread = "^5.7.2"
-python-dotenv = "^0.14.0"
+python-dotenv = "^1.0.0"
 python-telegram-bot = { extras = ["all"], version = "^20.1" }
 Pillow = "^9.4.0"
 python-bidi = "^0.4.2"
 pysos = "^1.2.1"
-schedule = "^0.6.0"
+schedule = "^1.1.0"
 tinydb = "^4.7.0"
 PyMySQL = "^1.0.2"
 tweepy = "^4.6.0"
 textile = "^4.0.2"
 termcolor = "^2.2.0"
-openai = "^0.27.0"
+openai = "^0.27.1"
 duckduckgo-search = "^2.8.1"
 cachetools = "^5.3.0"
+result = "^0.9.0"
+rich = "^13.3.2"
 
 
 [project]
 authors = [{ name = "OverflowCat", email = "overflowcat@gmail.com" }]
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "html-telegraph-poster<1.0.0,>=0.2.0",
-    "gspread<4.0.0,>=3.6.0",
+    "gspread<6.0.0,>=4.0.0",
     "python-dotenv<1.0.0,>=0.14.0",
-    "python-telegram-bot<14.0,>=13.11",
+    "python-telegram-bot<21.0,>=20.0",
     "Pillow<10.0.0,>=9.1.1",
     "python-bidi<1.0.0,>=0.4.2",
     "pysos<2.0.0,>=1.2.1",

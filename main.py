@@ -28,8 +28,10 @@ import storage
 import graph
 import sys
 from termcolor import colored, cprint
-
-from ai import ask_ai, respond_to_ai
+from rich import print
+from result import Result, Ok, Err
+import bbd
+import ai
 
 logger = logging.getLogger(__name__)
 
@@ -68,12 +70,10 @@ logging.basicConfig(
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="""Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
+    await update.message.reply_text(
+        """Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
 		You can also forward voice messages to me to get the file sizes of them.
-		Duty Machine service is temporarily down due to GitHub's term of service.""",
-        parse_mode=ParseMode.MARKDOWN,
+		Duty Machine service is temporarily down due to GitHub's term of service."""
     )
 
 
@@ -333,9 +333,29 @@ async def file_keeper(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text(text=str(format(siz_mb, ".2f")) + "MB\n" + graph_file)
 
 
+async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text.startswith("/"):
+        text = cutcmd(text)
+    await update.message.reply_text("Downloading Bilibili video…")
+    match bbd.download(text):
+        case Ok(f):
+            await update.message.reply_video(
+                f, caption=f"Downloaded {f.name.replace(bbd.tok, ' | ')}."
+            )
+        case Err(e):
+            print(f"[bold red]ERROR Downloading video, error {e}...[/bold red]")
+            await update.message.reply_html(
+                f"<b>Error</b>: Process ended with return code {e}."
+                if isinstance(e, int)
+                else f"<b>Error</b>: Video file expected to be found but failed. Please check logs."
+            )
+
+
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if not update.message or update.message.text: return
-    if await respond_to_ai(update, ctx):
+    if not update.message or update.message.text:
+        return
+    if await ai.respond_to_ai(update, ctx):
         return
     text = update.message.text
     if reg.is_status(text):
@@ -371,32 +391,6 @@ This process will be finished in several minutes, for we have supported archivin
             text="`" + text + "`\n" + resp,
             parse_mode=ParseMode.MARKDOWN)
         """
-
-
-async def download_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    bot = ctx.bot
-    sent_message = await update.message.reply_text("Now downloading video…")
-    url = cutcmd(update.message.text)  # .lower() Bilibili 的 BV 号是区分大小写的！！
-    storage.mkdir("/pan/annie/temp/")
-    fid = reg.id_generator(4)
-    storage.mkdir(f"/pan/annie/temp/{fid}/")
-    command = f'/pan/annie/annie -o "/pan/annie/temp/{fid}/" "{url}"'
-    print(command)
-    os.system(command)
-    # f'/pan/annie/annie -o "/pan/annie/temp/{fid}/" "{url}"'
-
-    files = os.listdir(f"/pan/annie/temp/{fid}/")
-    for f in files:
-        location = f"/pan/annie/temp/{fid}/{f}"
-        await sent_message.edit_text(f"Location: {location}")
-        await bot.send_video(
-            chat_id=update.message.chat_id,
-            video=open(location, "rb"),
-            supports_streaming=True,
-        )
-        # TODO: Files > 50 MB cannot be sent by bot directly!
-        storage.rm(f"/pan/annie/temp/{fid}")
-        return
 
 
 # TODO: 错误处理
@@ -436,13 +430,12 @@ file_handler = MessageHandler(
 )
 voice_handler = MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, voice_listener)
 photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
-video_handler = CommandHandler(
-    ["vid", "video", "annie"],
-    download_video,
-    # filters=(~ filters.Update.EDITED_MESSAGE),
-)
+bbdown_handler = CommandHandler(["bb", "bili", "b"], bbdown)
+# video_handler = CommandHandler(["vid", "video"], download_video, # filters=(~ filters.Update.EDITED_MESSAGE),)
 clear_handler = CommandHandler("clear", del_cache)
-ai_handler = CommandHandler(["wen", "man", "ask", "ai", "net", "netzh"], ask_ai, block=False)
+ai_handler = CommandHandler(
+    ["wen", "man", "ask", "ai", "net", "netzh"], ai.ask_ai, block=False
+)
 message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
 
 handlers = [
@@ -463,7 +456,8 @@ handlers = [
     file_handler,
     voice_handler,
     photo_handler,
-    video_handler,
+    bbdown_handler,
+    # video_handler,
     clear_handler,
     ai_handler,
 ]
@@ -473,4 +467,4 @@ for handler in handlers:
 
 # 拉清单
 logger.info("Bot started.")
-application.run_webhook()
+application.run_polling()
