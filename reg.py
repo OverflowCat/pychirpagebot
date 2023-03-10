@@ -4,7 +4,7 @@ import string
 import random
 
 status_url_patt = re.compile(
-    r"(https?:\/\/)(mobile\.)?(vx)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?",
+    r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?",
     flags=re.IGNORECASE,
 )
 
@@ -14,7 +14,7 @@ def is_status(url):
 
 
 profile_url_patt = re.compile(
-    r"(https?:\/\/)(mobile\.)?twitter\.com\/@?[a-zA-Z0-9_]+\/?", flags=re.IGNORECASE
+    r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/?", flags=re.IGNORECASE
 )
 
 
