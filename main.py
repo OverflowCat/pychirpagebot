@@ -93,12 +93,10 @@ async def arc_favs(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             return
     _t = None
 
-    sent_msg = await ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Now fetching @"
+    sent_msg = await update.message.reply_html(
+        "Now fetching @"
         + text
         + "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
-        parse_mode=ParseMode.HTML,
     )
     graf = graph.fetchFavs(text)
     # log(graf, "favs", text, "lazy_static" + ':favs')
@@ -113,7 +111,7 @@ async def arc_user(update: Update, ctx, cmd=True):
     if text == "":
         await update.message.reply_markdown("Please specify a username.")
         return
-    if "twitter.com" not in text or "vxtwitter.com" not in text:
+    if "twitter.com" not in text:
         if reg.is_valid_twitter_username(text) or reg.is_valid_as_twitter_username(
             text
         ):
@@ -136,29 +134,24 @@ async def arc_user(update: Update, ctx, cmd=True):
     if splited != [text]:
         title = splited[1]
         as_what = " as " + title
-    sent_msg = await ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support "
-        f"archiving large videos now.</i>",
-        parse_mode=ParseMode.HTML,
+    sent_msg = await update.message.reply_html(
+        f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
     )
     graf = graph.fetchUser(text, title=title)
     log(graf, text, "user", text + ":timeline")
-    sent_msg.edit_text(
+    await sent_msg.edit_text(
         text="<b>" + text + "</b>\n" + graf["url"], parse_mode=ParseMode.HTML
     )
     print(graf)
 
 
 async def arc_timeline(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    sent_msg = await ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
+    sent_msg = await update.message.reply_markdown(
         text="Now fetching timeline tweets…",
-        parse_mode=ParseMode.MARKDOWN,
     )
     graf = graph.fetchTimeline()
     log(graf, "tl", "timeline", "lazy_static" + ":favs")
-    sent_msg.edit_text(
+    await sent_msg.edit_text(
         text="*" + " Timeline tweets" + "*\n" + graf["url"],
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -201,11 +194,7 @@ async def arc_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def arc_mentions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    sended_msg = await ctx.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Now fetching mentions…\n",
-        parse_mode=ParseMode.HTML,
-    )
+    sended_msg = await update.message.reply_html("Now fetching mentions…\n")
     graf = graph.fetchMentions()
     log(graf, "mentions", "mentions", "lazy_static" + ":favs")
     await sended_msg.edit_text(
