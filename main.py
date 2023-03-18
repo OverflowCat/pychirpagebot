@@ -347,7 +347,7 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
-    if reg.get_bili(text):
+    if reg.get_bili(update.message.text):
         return await bbdown(update, ctx)
     if await ai.respond_to_ai(update, ctx):
         return

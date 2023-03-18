@@ -233,7 +233,12 @@ def dealWithTweets(tweets, **pa):
     # 判断是否是 reply
     reply_attr = getattr(t, 'in_reply_to_screen_name', None)
     if reply_attr is not None:
-      if t.in_reply_to_screen_name == t.user.screen_name: #thread 我回复我自己
+      if t.in_reply_to_screen_name is not None and t.in_reply_to_screen_name == t.user.screen_name: #thread 我回复我自己
+        """
+          File "/home/neko/pychirpagebot/graph.py", line 237, in dealWithTweets
+          reply_url = "https://twitter.com/" + t.user.screen_name + "/status/" + t.in_reply_to_status_id_str
+          TypeError: can only concatenate str (not "NoneType") to str
+        """
         reply_url = "https://twitter.com/" + t.user.screen_name + "/status/" + t.in_reply_to_status_id_str
         reply_html = '<p><strong>↬</strong> # <a href="' + reply_url + '">' + t.in_reply_to_status_id_str + "</a>"
       else:

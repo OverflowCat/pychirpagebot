@@ -33,10 +33,10 @@ escape = lambda x: f'"{x}"'
 def download(video):
     print(f"[bold blue]Start downloading {video}...[/bold blue]")
     timestamp = str(time.time_ns())
-    temp_dir = "temp/bb" + timestamp
-    cmd = f"""mkdir {temp_dir}
-{" ".join(["BBDown", video, "--encoding-priority", "hevc", "--work-dir", escape(temp_dir), "--file-pattern", escape(file_pattern)])}"""
-    print(cmd)
+    temp_dir = Path("temp/bb" + timestamp)
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    cmd = f"""{" ".join(["BBDown", video, "--encoding-priority", "hevc", "--work-dir", escape(temp_dir), "--file-pattern", escape(file_pattern)])}"""
+    print("[cyan]" + cmd + "[/cyan]")
     timestamp = None
     res = run(
         cmd,
@@ -50,10 +50,6 @@ def download(video):
     if not (files and files[0].suffix == ".mp4"):
         return Err(files)
     fname = files[0]
-    # files = [f for f in listdir(temp_dir) if isfile(join(temp_dir, f))]
-    # if not (files and files[0].endswith(".mp4")):
-    #     return Err(files)
-    # fname = files[0][:-4]
 
     print(fname)
     # run(" ".join(["rm", "-r", temp_dir]), capture_output=True, shell=True)
