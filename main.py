@@ -326,6 +326,9 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if text.startswith("/"):
         text = cutcmd(text)
+    text = reg.get_bili(text)
+    if text is None:
+        return await update.message.reply_text("Failed to find bili url.")
     await update.message.reply_text("Downloading Bilibili video…")
     match bbd.download(text):
         case Ok(f):
@@ -344,6 +347,8 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text:
         return
+    if reg.get_bili(text):
+        return await bbdown(update, ctx)
     if await ai.respond_to_ai(update, ctx):
         return
     text = update.message.text

@@ -3,13 +3,26 @@ import re
 import string
 import random
 
+url_patt = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+
+bili_url_patt = re.compile(r'https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+')
+
+whole_bili_url_patt = re.compile(r'^https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+$')
+
 status_url_patt = re.compile(
     r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?",
     flags=re.IGNORECASE,
 )
 
 
-def is_status(url):
+def is_bili(url: str) -> bool:
+    return bool(whole_bili_url_patt.match(url))
+
+def get_bili(url: str):
+    res = bili_url_patt.search(url)
+    return res.group() if res else None
+
+def is_status(url: str):
     return status_url_patt.match(url)
 
 
