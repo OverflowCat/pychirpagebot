@@ -1,6 +1,7 @@
 from subprocess import run
 import time
 from pathlib import Path
+from shutil import rmtree
 from result import Ok, Err, Result
 from rich import print
 
@@ -30,27 +31,35 @@ print(file_pattern)
 escape = lambda x: f'"{x}"'
 
 
-def download(video):
-    print(f"[bold blue]Start downloading {video}...[/bold blue]")
-    timestamp = str(time.time_ns())
-    temp_dir = Path("temp/bb" + timestamp)
-    temp_dir.mkdir(parents=True, exist_ok=True)
-    cmd = f"""{" ".join(["BBDown", video, "--encoding-priority", "hevc", "--work-dir", escape(temp_dir), "--file-pattern", escape(file_pattern)])}"""
-    print("[cyan]" + cmd + "[/cyan]")
-    timestamp = None
-    res = run(
-        cmd,
-        capture_output=True,
-        shell=True,
-    )
-    if res.returncode != 0:
-        return Err(res.returncode)
+class BBDownloader:
+    def __init__(self, video: str) -> None:
+        self.video = video
+        self.timestamp = None
+        self.temp_dir = None
+        self.fname = None
 
-    files = [f for f in Path(temp_dir).iterdir() if f.is_file()]
-    if not (files and files[0].suffix == ".mp4"):
-        return Err(files)
-    fname = files[0]
+    def __enter__(self):
+        print(f"[bold blue]Start downloading {self.video}...[/bold blue]")
+        self.timestamp = str(time.time_ns())
+        self.temp_dir = Path("temp/bb" + self.timestamp)
+        self.temp_dir.mkdir(parents=True, exist_ok=True)
+        cmd = f"""{" ".join(["BBDown", self.video, "--encoding-priority", "hevc", "--work-dir", escape(self.temp_dir), "--file-pattern", escape(file_pattern)])}"""
+        print("[cyan]" + cmd + "[/cyan]")
+        res = run(
+            cmd,
+            capture_output=True,
+            shell=True,
+        )
+        if res.returncode != 0:
+            return Err(res.returncode)
+        files = [f for f in Path(self.temp_dir).iterdir() if f.is_file()]
+        if not (files and files[0].suffix == ".mp4"):
+            return Err(files)
+        self.fname = files[0]
+        return Ok(self.fname)
 
-    print(fname)
-    # run(" ".join(["rm", "-r", temp_dir]), capture_output=True, shell=True)
-    return Ok(fname)
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        if self.temp_dir and self.temp_dir.is_dir():
+            rmtree(self.temp_dir)
+        if self.fname and self.fname.is_file():
+            self.fname.unlink()

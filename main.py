@@ -330,18 +330,19 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if text is None:
         return await update.message.reply_text("Failed to find bili url.")
     await update.message.reply_text("Downloading Bilibili video…")
-    match bbd.download(text):
-        case Ok(f):
-            await update.message.reply_video(
-                f, caption=f"Downloaded {f.name.replace(bbd.tok, ' | ')}."
-            )
-        case Err(e):
-            print(f"[bold red]ERROR Downloading video, error {e}...[/bold red]")
-            await update.message.reply_html(
-                f"<b>Error</b>: Process ended with return code {e}."
-                if isinstance(e, int)
-                else f"<b>Error</b>: Video file expected to be found but failed. Please check logs."
-            )
+    with bbd.BBDownloader(text) as res:
+        match res:
+            case Ok(f):
+                await update.message.reply_video(
+                    f, caption=f"Downloaded {f.name.replace(bbd.tok, ' | ')}."
+                )
+            case Err(e):
+                print(f"[bold red]ERROR Downloading video, error {e}...[/bold red]")
+                await update.message.reply_html(
+                    f"<b>Error</b>: Process ended with return code {e}."
+                    if isinstance(e, int)
+                    else f"<b>Error</b>: Video file expected to be found but failed. Please check logs."
+                )
 
 
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
