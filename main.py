@@ -16,6 +16,7 @@ import math
 import publish
 import reg
 from reg import cutcmd
+from context import ProgressContext
 import duty
 import os
 import re
@@ -76,7 +77,6 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 		Duty Machine service is temporarily down due to GitHub's term of service."""
     )
 
-
 async def arc_favs(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text).lower()
@@ -98,7 +98,7 @@ async def arc_favs(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         + text
         + "'s favorite tweets…\n<i>This process may take several minutes, as we support archiving videos now.</i>",
     )
-    graf = graph.fetchFavs(text)
+    graf = await graph.fetch_favs(text)
     # log(graf, "favs", text, "lazy_static" + ':favs')
     await sent_msg.edit_text(
         text="*" + text + "*\n" + graf["url"], parse_mode=ParseMode.MARKDOWN
@@ -137,7 +137,7 @@ async def arc_user(update: Update, ctx, cmd=True):
     sent_msg = await update.message.reply_html(
         f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
     )
-    graf = graph.fetchUser(text, title=title)
+    graf = await graph.fetch_user(text, title, ProgressContext(sent_msg))
     log(graf, text, "user", text + ":timeline")
     await sent_msg.edit_text(
         text="<b>" + text + "</b>\n" + graf["url"], parse_mode=ParseMode.HTML
@@ -149,7 +149,7 @@ async def arc_timeline(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     sent_msg = await update.message.reply_markdown(
         text="Now fetching timeline tweets…",
     )
-    graf = graph.fetchTimeline()
+    graf = await graph.fetch_timeline()
     log(graf, "tl", "timeline", "lazy_static" + ":favs")
     await sent_msg.edit_text(
         text="*" + " Timeline tweets" + "*\n" + graf["url"],
@@ -185,7 +185,7 @@ async def arc_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         text=f"Now fetching list {list_id}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
         parse_mode=ParseMode.HTML,
     )
-    graf = graph.fetchList(list_id)
+    graf = await graph.fetch_list(list_id)
 
     await sended_msg.edit_text(
         text="*" + " Archived tweets" + "*\n" + graf["url"],
@@ -195,7 +195,7 @@ async def arc_list(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 async def arc_mentions(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     sended_msg = await update.message.reply_html("Now fetching mentions…\n")
-    graf = graph.fetchMentions()
+    graf = await graph.fetch_mentions()
     log(graf, "mentions", "mentions", "lazy_static" + ":favs")
     await sended_msg.edit_text(
         text="*Mentions tweets*\n" + graf["url"], parse_mode=ParseMode.MARKDOWN
@@ -247,10 +247,10 @@ async def ping(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await ctx.bot.send_message(chat_id=update.effective_chat.id, text="Pong!")
 
 
-def userduty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+async def userduty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     text = cutcmd(text)
-    graf = graph.fetchUser(text)
+    graf = await graph.fetch_user(text)
     resp = duty.dm(graf)
     log(graf, text, "userduty", resp)
     ctx.bot.send_message(
@@ -346,13 +346,15 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if not update.message or not update.message.text:
+    if not update.message or not (update.message.text or update.message.caption):
+        print(update)
         return
-    if reg.get_bili(update.message.text):
-        return await bbdown(update, ctx)
-    if await ai.respond_to_ai(update, ctx):
-        return
-    text = update.message.text
+    if update.message.text:
+        if reg.get_bili(update.message.text):
+            return await bbdown(update, ctx)
+        if await ai.respond_to_ai(update, ctx):
+            return
+    text = update.message.text or update.message.caption
     if reg.is_status(text):
         regf = re.findall(r"com\/@?[a-zA-Z0-9_]+\/status", text)[0]
         spl = regf.split(r"/")
@@ -365,7 +367,7 @@ async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
             quote=True,
         )
-        graf = graph.fetchUser(user, title=user)
+        graf = await graph.fetch_user(user, user, ProgressContext(sent_msg))
         log(graf, user, "user", text + ":timeline")
         await sent_msg.edit_text(
             text="Got user from link: " + user + "\n" + graf["url"],
@@ -431,7 +433,9 @@ clear_handler = CommandHandler("clear", del_cache)
 ai_handler = CommandHandler(
     ["wen", "man", "ask", "ai", "net", "netzh"], ai.ask_ai, block=False
 )
-message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), plain_msg)
+message_handler = MessageHandler(
+    (filters.TEXT | filters.CAPTION | filters.FORWARDED) & (~filters.COMMAND), plain_msg
+)
 
 handlers = [
     start_handler,

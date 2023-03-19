@@ -10,3 +10,4 @@ ffprobe
 __pycache__
 *.json
 *.crx
+*.log

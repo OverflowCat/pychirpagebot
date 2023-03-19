@@ -1,3 +1,4 @@
+"""
 async def download_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     bot = ctx.bot
     sent_message = await update.message.reply_text("Now downloading video…")
@@ -22,3 +23,17 @@ async def download_video(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         # TODO: Files > 50 MB cannot be sent by bot directly!
         storage.rm(f"/pan/annie/temp/{fid}")
         return
+
+async def pagesTweets(tweets, **pa):
+  counter = 0
+  outputTweets = []
+  graves = []
+  for t in tweets:
+    counter += 1
+    if counter%60 == 0:
+      # New page!
+      graves.append(await dealWithTweets(outputTweets, pa))
+    else:
+      outputTweets.append(t)
+  return graves
+"""
