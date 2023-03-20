@@ -257,7 +257,7 @@ async def userduty(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     graf = await graph.fetch_user(text)
     resp = duty.dm(graf)
     log(graf, text, "userduty", resp)
-    ctx.bot.send_message(
+    await ctx.bot.send_message(
         chat_id=update.effective_chat.id,
         text="`" + text + "`\n" + resp,
         parse_mode=ParseMode.MARKDOWN,
