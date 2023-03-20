@@ -9,6 +9,7 @@ import ffm
 from typing import Optional, Dict, List, Tuple
 from tweets import *
 from cachetools import cached, TTLCache
+from cache import AsyncTTL
 from context import ProgressContext
 
 current_tweet = ""
@@ -164,7 +165,7 @@ async def fetch_favs(user: str = "elonmusk", title: str = ""):
     graf["max_id"] = max_id
     return graf
 
-
+@AsyncTTL(time_to_live=3200, maxsize=250)
 async def fetch_user(
     user: str = "elonmusk", title: str = "", context: ProgressContext = None
 ):
@@ -180,7 +181,7 @@ async def fetch_user(
     graf = graph.post(title=title, author="Twitter", text=" " + "".join(output))
     return graf
 
-
+@AsyncTTL(time_to_live=8640, maxsize=200)
 async def fetch_list(list_id: str, title: str = ""):
     # tweets = tweepy.Cursor(api.list_timeline, list_id=1496265153821745158,
     #                       tweet_mode="extended").items(60)
@@ -326,7 +327,6 @@ async def dealWithTweets(tweets, context: ProgressContext = False, **pa):
             imgurls = []
             for media in t.extended_entities["media"]:
                 imgurls.append(" " + media["media_url"])
-            print("pa context:", context)
             if context:
                 await context.uploading_assets(", ".join(imgurls))
             graphimgurls = save_imgs(imgurls)

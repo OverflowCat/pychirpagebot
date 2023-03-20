@@ -19,6 +19,9 @@ from reg import cutcmd
 from context import ProgressContext
 import duty
 import os
+import sys
+args = sys.argv[1:]  # 从第二个参数开始获取所有命令行参数
+bot_id = args[0]
 import re
 from dotenv import load_dotenv
 
@@ -63,7 +66,7 @@ def log(_path, _user, _type, _query):
 
 myfllwings = []
 
-application = ApplicationBuilder().token(os.environ["chirpage"]).build()
+application = ApplicationBuilder().token(os.environ["CHIRPAGE" + bot_id]).concurrent_updates(4).build()
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -76,6 +79,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 		You can also forward voice messages to me to get the file sizes of them.
 		Duty Machine service is temporarily down due to GitHub's term of service."""
     )
+
 
 async def arc_favs(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -339,7 +343,7 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             case Err(e):
                 print(f"[bold red]ERROR Downloading video, error {e}...[/bold red]")
                 await update.message.reply_html(
-                    f"<b>Error</b>: Process ended with return code {e}."
+                    f"<b>Error</b>: Process ended with return code {e}. Maybe the link is a live steam."
                     if isinstance(e, int)
                     else f"<b>Error</b>: Video file expected to be found but failed. Please check logs."
                 )

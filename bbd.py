@@ -26,7 +26,6 @@ file_pattern = ["<aid>", "<videoTitle>", "<aid>", "<cid>", "<fps>", "<ownerMid>"
 <ownerMid>: 上传者mid
 """
 file_pattern = tok.join(file_pattern)
-print(file_pattern)
 
 escape = lambda x: f'"{x}"'
 
