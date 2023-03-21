@@ -10,7 +10,7 @@ from typing import Optional, Dict, List, Tuple
 from tweets import *
 from cachetools import cached, TTLCache
 from cache import AsyncTTL
-from context import ProgressContext
+from context import ProgressContext, FakeProgressContext
 
 current_tweet = ""
 use_png = False
@@ -165,6 +165,7 @@ async def fetch_favs(user: str = "elonmusk", title: str = ""):
     graf["max_id"] = max_id
     return graf
 
+
 @AsyncTTL(time_to_live=3200, maxsize=250)
 async def fetch_user(
     user: str = "elonmusk", title: str = "", context: ProgressContext = None
@@ -180,6 +181,7 @@ async def fetch_user(
     output = await dealWithTweets(tweets, username=False, context=context)
     graf = graph.post(title=title, author="Twitter", text=" " + "".join(output))
     return graf
+
 
 @AsyncTTL(time_to_live=8640, maxsize=200)
 async def fetch_list(list_id: str, title: str = ""):
@@ -229,7 +231,9 @@ async def search(query, title: str = "text"):
     return graf
 
 
-async def dealWithTweets(tweets, context: ProgressContext = False, **pa):
+async def dealWithTweets(
+    tweets, context: ProgressContext | FakeProgressContext = FakeProgressContext(), **pa
+):
     global dwt
     dwt = tweets
     output = []
@@ -327,8 +331,7 @@ async def dealWithTweets(tweets, context: ProgressContext = False, **pa):
             imgurls = []
             for media in t.extended_entities["media"]:
                 imgurls.append(" " + media["media_url"])
-            if context:
-                await context.uploading_assets(", ".join(imgurls))
+            await context.uploading_assets(", ".join(imgurls))
             graphimgurls = save_imgs(imgurls)
             graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]
             htmls.append("".join(graphimgshtml))
@@ -349,8 +352,7 @@ async def dealWithTweets(tweets, context: ProgressContext = False, **pa):
                 sorted_variants = sorted(variants, key=lambda va: -va["bitrate"])
                 # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
                 video_url = sorted_variants[0]["url"]
-                if context:
-                    await context.uploading_assets(video_url)
+                await context.uploading_assets(video_url)
                 vid_urls = (
                     save_vid(video_url) if is_ffmpeg_installed else [video_url]
                 )  # <- save_img(…)
