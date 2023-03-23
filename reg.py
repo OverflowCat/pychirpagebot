@@ -3,11 +3,15 @@ import re
 import string
 import random
 
-url_patt = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+url_patt = re.compile(
+    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+)
 
-bili_url_patt = re.compile(r'https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+')
+bili_url_patt = re.compile(r"https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+")
 
-whole_bili_url_patt = re.compile(r'^https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+$')
+whole_bili_url_patt = re.compile(
+    r"^https?://(?:www\.)?(?:bilibili\.com|b23\.(?:tv|wtf))/\S+$"
+)
 
 status_url_patt = re.compile(
     r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/status\/[0-9]+(\/(s\?=[0-9]+)?)?",
@@ -18,16 +22,30 @@ status_url_patt = re.compile(
 def is_bili(url: str) -> bool:
     return bool(whole_bili_url_patt.match(url))
 
+
 def get_bili(url: str):
     res = bili_url_patt.search(url)
     return res.group() if res else None
+
 
 def is_status(url: str):
     return status_url_patt.match(url)
 
 
+id_pattern = re.compile(r"/status/(\d+)$")
+
+
+def get_status_id(url):
+    match = id_pattern.search(url)
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+
 profile_url_patt = re.compile(
-    r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/?", flags=re.IGNORECASE
+    r"(https?:\/\/)(mobile\.)?([vf]x)?twitter\.com\/@?[a-zA-Z0-9_]+\/?",
+    flags=re.IGNORECASE,
 )
 
 

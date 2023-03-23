@@ -6,7 +6,8 @@ import tweepy
 import requests
 import db
 import ffm
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Tuple
+
 # from tweets import *
 from cachetools import cached, TTLCache
 from cache import AsyncTTL
@@ -103,12 +104,12 @@ def save_img(url: str, save2disk: Optional[bool] = False) -> str:
         return graphfileurl
 
 
-def save_imgs(imgurls: List[str]) -> List[str]:
+def save_imgs(imgurls: list[str]) -> list[str]:
     print("Saving " + ", ".join(imgurls))
     return [save_img(x) for x in imgurls]
 
 
-def save_vid(url, removeFailed=False) -> List[str]:
+def save_vid(url, removeFailed=False) -> list[str]:
     return [
         upload(x) for x in ffm.split(save_img(url, True)) if not removeFailed or x != ""
     ]
@@ -230,6 +231,7 @@ async def search(query, title: str = "text"):
     graf = graph.post(title=title, author="Twitter Search", text="".join(output))
     return graf
 
+
 async def dealWithTweets(
     tweets, context: ProgressContext | FakeProgressContext = FakeProgressContext(), **pa
 ):
@@ -327,13 +329,18 @@ async def dealWithTweets(
 
         # Image(s)
         if "media" in t.entities:
-            imgurls = []
-            for media in t.extended_entities["media"]:
-                imgurls.append(" " + media["media_url"])
+            imgurls = [
+                " " + media["media_url"]
+                for media in t.extended_entities.get("media", [])
+            ]
+            # Why is there a space?
             await context.uploading_assets(", ".join(imgurls))
-            graphimgurls = save_imgs(imgurls)
-            graphimgshtml = ['<img src="' + ele + '">' for ele in graphimgurls]
-            htmls.append("".join(graphimgshtml))
+            telegraph_img_urls = save_imgs(imgurls)
+            if context.tweet_id == t.id:
+                await context.got_desired_tweet(t, telegraph_img_urls)
+            htmls.append(
+                "".join(['<img src="' + ele + '">' for ele in telegraph_img_urls])
+            )
 
         # Save videos
         global current_tweet
@@ -375,6 +382,7 @@ async def dealWithTweets(
     db.logtweets([t._json for t in tweets])
     # 放在 for t in tweets:... 前就不行
     return ("".join(bioInfo) + "".join(output)).replace("\n", "<br>")
+
 
 def userBio(userobj) -> str:
     output = []
@@ -423,6 +431,7 @@ def userBio(userobj) -> str:
     output = "".join(output)
     print(output)
     return output
+
 
 def p(text: str, title: str = "Logs"):
     return graph.post(title=title, author="Chirpage", text=text)

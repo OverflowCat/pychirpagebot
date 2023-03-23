@@ -100,17 +100,18 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             },
         ]
         search_query = prompt
-        try:
-            resp = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo", messages=messages
-            )
-            search_query = resp["choices"][0]["message"]["content"]
-            print(search_query)
-            await update.message.reply_text(
-                f"""{"你好，这是鸭鸭走。现正在搜索" if lang=='zh' else "Hello, this is DuckDuckGo. Now searching"} {search_query}…"""
-            )
-        except:
-            print("Failed to perfrom search query generation.")
+        if False:
+            try:
+                resp = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo", messages=messages
+                )
+                search_query = resp["choices"][0]["message"]["content"]
+                print(search_query)
+                await update.message.reply_text(
+                    f"""{"你好，这是鸭鸭走。现正在搜索" if lang=='zh' else "Hello, this is DuckDuckGo. Now searching"} {search_query}…"""
+                )
+            except:
+                print("Failed to perfrom search query generation.")
 
         results = ddg(
             search_query, region="wt-wt", safesearch="Off", time="y"
@@ -127,9 +128,9 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         messages = [
             {
                 "role": "system",
-                "content": "分析搜索结果并回答用户问题"  # "用<1>content</1>等编号标记来源"
+                "content": "分析搜索结果并回答用户问题。用<1>content</1>等编号标记来源。"
                 if lang == "zh"
-                else "Analyze given search results and respond.",  # "Mark reference using indexes: <1>content</1> etc.",
+                else "Analyze given search results and respond. Mark reference using indexes: <1>content</1> etc.",
             },
             {
                 "role": "assistant",
@@ -137,7 +138,7 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             },
             {
                 "role": "user",
-                "content": f"根据搜索结果回答 {prompt}" if lang == "zh" else prompt,
+                "content": f"根据搜索结果解释回答「{prompt}」" if lang == "zh" else prompt,
             },
         ]
     else:
@@ -171,6 +172,7 @@ async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not (
         quote
         and quote.from_user.id in [827065789, 6158853909]
+        and quote.text is not None
         and quote.text.endswith(" tokens")
     ):
         return False

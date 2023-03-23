@@ -20,6 +20,7 @@ from context import ProgressContext, FakeProgressContext
 import duty
 import os
 import sys
+
 args = sys.argv[1:]  # 从第二个参数开始获取所有命令行参数
 bot_id = args[0]
 import re
@@ -66,7 +67,12 @@ def log(_path, _user, _type, _query):
 
 myfllwings = []
 
-application = ApplicationBuilder().token(os.environ["CHIRPAGE" + bot_id]).concurrent_updates(4).build()
+application = (
+    ApplicationBuilder()
+    .token(os.environ["CHIRPAGE" + bot_id])
+    .concurrent_updates(4)
+    .build()
+)
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -141,8 +147,12 @@ async def arc_user(update: Update, ctx, cmd=True):
     sent_msg = await update.message.reply_html(
         f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
     )
-    progress_context = FakeProgressContext if update.effective_chat.type == "PRIVATE" else ProgressContext(sent_msg)
-    graf = await graph.fetch_user(text, title, ProgressContext(sent_msg))
+    progress_context = (
+        FakeProgressContext
+        if update.effective_chat.type == "PRIVATE"
+        else ProgressContext(sent_msg, update)
+    )
+    graf = await graph.fetch_user(text, title, progress_context)
     log(graf, text, "user", text + ":timeline")
     await sent_msg.edit_text(
         text="<b>" + text + "</b>\n" + graf["url"], parse_mode=ParseMode.HTML
@@ -370,9 +380,13 @@ async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         sent_msg = await update.message.reply_text(
             text=f"""Found user in link: @{user}
 This process will be finished in several minutes, for we have supported archiving large videos. Please wait patiently.""",
-            quote=True,
+            quote=update.effective_chat.type == "PRIVATE",
         )
-        graf = await graph.fetch_user(user, user, ProgressContext(sent_msg))
+        graf = await graph.fetch_user(
+            user,
+            user,
+            ProgressContext(sent_msg, update, tweet_id=int(reg.get_status_id(text))),
+        )
         log(graf, user, "user", text + ":timeline")
         await sent_msg.edit_text(
             text="Got user from link: " + user + "\n" + graf["url"],
