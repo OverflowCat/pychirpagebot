@@ -7,7 +7,7 @@ import requests
 import db
 import ffm
 from typing import Optional, Dict, List, Tuple
-from tweets import *
+# from tweets import *
 from cachetools import cached, TTLCache
 from cache import AsyncTTL
 from context import ProgressContext, FakeProgressContext
@@ -230,7 +230,6 @@ async def search(query, title: str = "text"):
     graf = graph.post(title=title, author="Twitter Search", text="".join(output))
     return graf
 
-
 async def dealWithTweets(
     tweets, context: ProgressContext | FakeProgressContext = FakeProgressContext(), **pa
 ):
@@ -377,7 +376,6 @@ async def dealWithTweets(
     # 放在 for t in tweets:... 前就不行
     return ("".join(bioInfo) + "".join(output)).replace("\n", "<br>")
 
-
 def userBio(userobj) -> str:
     output = []
     u = userobj
@@ -425,7 +423,6 @@ def userBio(userobj) -> str:
     output = "".join(output)
     print(output)
     return output
-
 
 def p(text: str, title: str = "Logs"):
     return graph.post(title=title, author="Chirpage", text=text)

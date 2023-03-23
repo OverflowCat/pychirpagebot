@@ -42,11 +42,16 @@ def limit_string(text):
         return text + "…"
 
 
-def search_results_to_text(result) -> str:
+def join_search_results(results) -> str:
     # {'title': str,
     # 'href': str,
     # 'body': str,}
-    return result["title"] + "\n" + limit_string(result["body"])
+    return "\n\n".join(
+        [
+            f"""<{i}>: {result["title"]}\n{limit_string(result["body"])}"""
+            for i, result in enumerate(results)
+        ]
+    )
 
 
 async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
@@ -56,22 +61,83 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     prompt = cutcmd(update.message.text)
     print("Asking", prompt + "…")
 
+    lang = "zh" if update.message.text.startswith("/netzh") else ""
+
     if update.message.text.startswith("/net"):
-        results = ddg(prompt, region="wt-wt", safesearch="Off", time="y")  # global
-        if len(results) > 5:
-            results = results[:5]
-        print(results)
         messages = [
-            {"role": "system", "content": "Analyze given search results and respond."},
             {
-                "role": "assistant",
-                "content": "\n\n".join(map(search_results_to_text, results)),
+                "role": "system",
+                "content": "Act as a search assistant. Analyze user's query and reply with a search query that can be used in Google to find corresponding results. Reply plain text keywords separated by spaces only, DO NOT EXPLAIN or INSTRUCT.",
             },
             {
                 "role": "user",
-                "content": f"用中文解释 {prompt}"
-                if update.message.text.startswith("/netzh")
-                else f"Explain {prompt}",
+                "content": "@OverflowCat 是谁？他有啥开源项目？"
+                if lang == "zh"
+                else "Who's @OverflowCat on GitHub? What projects does he work on?",
+            },
+            {
+                "role": "assistant",
+                "content": """@OverflowCat site:github.com""",
+            },
+            {
+                "role": "user",
+                "content": "@OverflowCat 是谁？他有啥开源项目？"
+                if lang == "zh"
+                else "Who's @OverflowCat on GitHub? What projects does he work on?",
+            },
+            {
+                "role": "assistant",
+                "content": """@OverflowCat site:github.com""",
+            },
+            {
+                "role": "user",
+                "content": "韩剧黑暗荣耀好看吗",
+            },
+            {"role": "assistant", "content": "黑暗荣耀 韩剧 评价"},
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ]
+        search_query = prompt
+        try:
+            resp = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo", messages=messages
+            )
+            search_query = resp["choices"][0]["message"]["content"]
+            print(search_query)
+            await update.message.reply_text(
+                f"""{"你好，这是鸭鸭走。现正在搜索" if lang=='zh' else "Hello, this is DuckDuckGo. Now searching"} {search_query}…"""
+            )
+        except:
+            print("Failed to perfrom search query generation.")
+
+        results = ddg(
+            search_query, region="wt-wt", safesearch="Off", time="y"
+        )  # global
+        if results is None or results == [] or len(results) == 0:
+            if search_query != prompt:
+                results = ddg(prompt, region="wt-wt", safesearch="Off", time="y")
+        if len(results) > 5:
+            results = results[:5]
+        if results is None or results == [] or len(results) == 0:
+            await update.message.reply_text("Sorry, no results found on DuckDuckGo.")
+            return
+        print(results)
+        messages = [
+            {
+                "role": "system",
+                "content": "分析搜索结果并回答用户问题"  # "用<1>content</1>等编号标记来源"
+                if lang == "zh"
+                else "Analyze given search results and respond.",  # "Mark reference using indexes: <1>content</1> etc.",
+            },
+            {
+                "role": "assistant",
+                "content": join_search_results(results),
+            },
+            {
+                "role": "user",
+                "content": f"根据搜索结果回答 {prompt}" if lang == "zh" else prompt,
             },
         ]
     else:
@@ -103,7 +169,9 @@ async def ask_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     quote = update.message.reply_to_message or None
     if not (
-        quote and quote.from_user.id in [827065789, 6158853909] and quote.text.endswith(" tokens")
+        quote
+        and quote.from_user.id in [827065789, 6158853909]
+        and quote.text.endswith(" tokens")
     ):
         return False
 

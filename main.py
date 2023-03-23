@@ -16,7 +16,7 @@ import math
 import publish
 import reg
 from reg import cutcmd
-from context import ProgressContext
+from context import ProgressContext, FakeProgressContext
 import duty
 import os
 import sys
@@ -141,6 +141,7 @@ async def arc_user(update: Update, ctx, cmd=True):
     sent_msg = await update.message.reply_html(
         f"Now fetching user @{text}'s tweets{as_what}…\n<i>This process may take several minutes, as we support archiving large videos now.</i>",
     )
+    progress_context = FakeProgressContext if update.effective_chat.type == "PRIVATE" else ProgressContext(sent_msg)
     graf = await graph.fetch_user(text, title, ProgressContext(sent_msg))
     log(graf, text, "user", text + ":timeline")
     await sent_msg.edit_text(
