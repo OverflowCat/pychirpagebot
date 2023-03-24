@@ -35,10 +35,11 @@ class ProgressContext:
         self.count += 1
 
     async def uploading_assets(self, text: str):
-        if self.sent_desired:
-            return
-
-        if self.more_than_30:
+        if (
+            self.sent_desired
+            or self.more_than_30
+            or self.update.effective_chat.type == "PRIVATE"
+        ):
             return
         elif self.count >= 30:
             self.more_than_30 = True
@@ -52,18 +53,19 @@ class ProgressContext:
         if random.random() < 0.5:
             await self.message.edit_text(new_text)
 
-    async def got_desired_tweet(self, tweet, media: list[str] | str | None):
+    async def got_desired_tweet(self, tweet, media: list[str] | str | None = None):
+        m = self.update.message if self.update.effective_chat.type == 'PRIVATE' else self.message
         caption = f"""@{tweet.user.screen_name} on Twitter:
 {tweet.full_text}
 https://vxtwitter.com/{tweet.user.screen_name}/status/{tweet.id_str}"""
         if media is None:
-            await self.update.message.reply_text(caption, quote=True)
+            await m.edit_text(caption, quote=True)
         elif isinstance(media, list):
             media = list(map(InputMediaPhoto, media))
         elif isinstance(media, str):
             media = [InputMediaVideo(media)]
         else:
             raise ValueError("Invalid media type")
-        await self.update.message.reply_media_group(media, caption=caption, quote=True)
+        await m.reply_media_group(media, caption=caption, quote=True)
         self.sent_desired = True
         # await self.message.delete()

@@ -65,6 +65,15 @@ def log(_path, _user, _type, _query):
     return r.json()
 
 
+def parse_int_or_str(s: str) -> int | str:
+    try:
+        return int(s)
+    except ValueError:
+        return s
+
+
+ADMIN_ID = os.environ["CHIRPAGE_BOT_ADMIN_ID"]
+
 myfllwings = []
 
 application = (
@@ -388,8 +397,9 @@ This process will be finished in several minutes, for we have supported archivin
             ProgressContext(sent_msg, update, tweet_id=int(reg.get_status_id(text))),
         )
         log(graf, user, "user", text + ":timeline")
+        text = "Got user from link: " + user + "\n" + graf["url"]
         await sent_msg.edit_text(
-            text="Got user from link: " + user + "\n" + graf["url"],
+            text=text if update.effective_chat.type == "PRIVATE" else sent_msg.text + "\n" + text,
             parse_mode=ParseMode.HTML,
         )
         print(graf)

@@ -329,12 +329,9 @@ async def dealWithTweets(
 
         is_desired_tweet_and_not_uploaded = context.tweet_id == t.id
         has_vid = hasattr(t, "extended_entities")
-        has_media = "media" in t.entities
-        if is_desired_tweet_and_not_uploaded and not has_vid and not has_vid:
-            await context.got_desired_tweet(t)
 
         # Image(s)
-        if has_media:
+        if "media" in t.entities:
             imgurls = [
                 " " + media["media_url"]
                 for media in t.extended_entities.get("media", [])
@@ -342,7 +339,7 @@ async def dealWithTweets(
             # Why is there a space?
             await context.uploading_assets(", ".join(imgurls))
             telegraph_img_urls = save_imgs(imgurls)
-            if is_desired_tweet_and_not_uploaded and not has_vid:
+            if is_desired_tweet_and_not_uploaded:
                 await context.got_desired_tweet(t, telegraph_img_urls)
                 is_desired_tweet_and_not_uploaded = False
             htmls.append(
@@ -365,8 +362,9 @@ async def dealWithTweets(
                 sorted_variants = sorted(variants, key=lambda va: -va["bitrate"])
                 # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
                 video_url = sorted_variants[0]["url"]
-                if context.tweet_id == t.id:
+                if is_desired_tweet_and_not_uploaded:
                     await context.got_desired_tweet(t, video_url)
+                    is_desired_tweet_and_not_uploaded = False
                 await context.uploading_assets(video_url)
                 vid_urls = (
                     save_vid(video_url) if is_ffmpeg_installed else [video_url]
@@ -384,6 +382,9 @@ async def dealWithTweets(
                 # TODO: Move figure to its preview image
                 # htm.append(f'<figure><video src="{vid_url}" preload="auto" controls="controls"></video>
                 # <figcaption>Video</figcaption></figure>')
+
+        if is_desired_tweet_and_not_uploaded:
+            await context.got_desired_tweet(t)
 
         date_time = t.created_at.strftime("%Y/%m/%d, %H:%M:%S")
         htmls.append("<p><i>" + date_time + "</i> · " + t.source + "</p>")
