@@ -1,9 +1,15 @@
-from telegram import Message, Update, InputMediaPhoto
+from telegram import Message, Update, InputMediaPhoto, InputMediaVideo
 import random
 
 
 class FakeProgressContext:
     def __init__(self):
+        self.message = None
+        self.update = None
+        self.count = 0
+        self.more_than_30 = False
+        self.tweet_id = -1
+        self.sent_desired = False
         return
 
     def add_count(self):
@@ -46,11 +52,18 @@ class ProgressContext:
         if random.random() < 0.5:
             await self.message.edit_text(new_text)
 
-    async def got_desired_tweet(self, tweet, images: list[str]):
-        media = list(map(InputMediaPhoto, images))
+    async def got_desired_tweet(self, tweet, media: list[str] | str | None):
         caption = f"""@{tweet.user.screen_name} on Twitter:
 {tweet.full_text}
 https://vxtwitter.com/{tweet.user.screen_name}/status/{tweet.id_str}"""
+        if media is None:
+            await self.update.message.reply_text(caption, quote=True)
+        elif isinstance(media, list):
+            media = list(map(InputMediaPhoto, media))
+        elif isinstance(media, str):
+            media = [InputMediaVideo(media)]
+        else:
+            raise ValueError("Invalid media type")
         await self.update.message.reply_media_group(media, caption=caption, quote=True)
         self.sent_desired = True
         # await self.message.delete()

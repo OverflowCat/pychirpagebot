@@ -327,8 +327,14 @@ async def dealWithTweets(
                 )
         htmls.append("<p>" + tco(status_text) + r"</p>")
 
+        is_desired_tweet_and_not_uploaded = context.tweet_id == t.id
+        has_vid = hasattr(t, "extended_entities")
+        has_media = "media" in t.entities
+        if is_desired_tweet_and_not_uploaded and not has_vid and not has_vid:
+            await context.got_desired_tweet(t)
+
         # Image(s)
-        if "media" in t.entities:
+        if has_media:
             imgurls = [
                 " " + media["media_url"]
                 for media in t.extended_entities.get("media", [])
@@ -336,16 +342,17 @@ async def dealWithTweets(
             # Why is there a space?
             await context.uploading_assets(", ".join(imgurls))
             telegraph_img_urls = save_imgs(imgurls)
-            if context.tweet_id == t.id:
+            if is_desired_tweet_and_not_uploaded and not has_vid:
                 await context.got_desired_tweet(t, telegraph_img_urls)
+                is_desired_tweet_and_not_uploaded = False
             htmls.append(
                 "".join(['<img src="' + ele + '">' for ele in telegraph_img_urls])
             )
 
         # Save videos
         global current_tweet
-        current_tweet = t._json
-        if hasattr(t, "extended_entities"):
+        # current_tweet = t._json
+        if has_vid:
             e = t.extended_entities
             v = e["media"][0]
             if v["type"] == "video":
@@ -358,6 +365,8 @@ async def dealWithTweets(
                 sorted_variants = sorted(variants, key=lambda va: -va["bitrate"])
                 # print(json.dumps(sorted_variants, indent=2)) # 不同清晰度的视频
                 video_url = sorted_variants[0]["url"]
+                if context.tweet_id == t.id:
+                    await context.got_desired_tweet(t, video_url)
                 await context.uploading_assets(video_url)
                 vid_urls = (
                     save_vid(video_url) if is_ffmpeg_installed else [video_url]

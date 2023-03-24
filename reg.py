@@ -32,7 +32,7 @@ def is_status(url: str):
     return status_url_patt.match(url)
 
 
-id_pattern = re.compile(r"/status/(\d+)$")
+id_pattern = re.compile(r"/status/(\d+)")
 
 
 def get_status_id(url):
