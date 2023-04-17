@@ -173,7 +173,7 @@ async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         quote
         and quote.from_user.id in [827065789, 6158853909]
         and quote.text is not None
-        and quote.text.endswith(" tokens")
+        # and quote.text.endswith(" tokens")
     ):
         return False
 
@@ -182,8 +182,9 @@ async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
     print("=== 会话 ===", {"q": quote.from_user.id, "t": quote.text})
     lines = quote.text.splitlines()
-    del lines[-2:]
-    prev_resp = "\n".join(lines)  # 删除上次回复最后的 token 数量统计
+    if quote.text.endswith(" tokens"):
+        del lines[-2:] # 删除上次回复最后的 token 数量统计
+    prev_resp = "\n".join(lines)
 
     resp = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
@@ -206,3 +207,26 @@ async def respond_to_ai(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
             quote=True,
         )
     return True
+
+
+from messages import msg_manager
+async def summarize_recent_chat_messages(update: Update) -> str:
+    messages = await msg_manager.get_latest_messages_by_group_id(update.effective_chat.id, 50)
+    prompt = [f"{message.user_id}: {message.text}" for message in messages if message.text]
+    messages = [
+        {
+            "role": "system",
+            "content":  "请总结聊天记录并列出5个关键词"
+        },
+        {
+            "role": "user",
+            "content": prompt, 
+        }
+    ]
+    resp = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=messages)
+    generated = resp["choices"][0]["message"]["content"]
+    calc = f"{resp['usage']['prompt_tokens']} + {resp['usage']['completion_tokens']} = {resp['usage']['total_tokens']} tokens"
+    await update.message.reply_text(
+        generated + f"\n\n{calc}",
+        quote=True,
+    )

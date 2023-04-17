@@ -20,24 +20,22 @@ from context import ProgressContext, FakeProgressContext
 import duty
 import os
 import sys
-
+import re
 args = sys.argv[1:]  # 从第二个参数开始获取所有命令行参数
 bot_id = args[0]
-import re
 from dotenv import load_dotenv
-
 load_dotenv()  # graph.py requires env
-
 from ffm import is_ffmpeg_installed
 import storage
 import graph
 import sys
-from termcolor import colored, cprint
+from termcolor import cprint
 from rich import print
-from result import Result, Ok, Err
+from result import Ok, Err
 import bbd
 import ai
-
+import poeai
+from messages import msg_manager
 logger = logging.getLogger(__name__)
 
 logger.info("Starting up...")
@@ -417,7 +415,8 @@ This process will be finished in several minutes, for we have supported archivin
             text="`" + text + "`\n" + resp,
             parse_mode=ParseMode.MARKDOWN)
         """
-
+    elif update.effective_chat.type != "PRIVATE":
+        msg_manager.add_message(group_id=update.effective_chat.id, msg_id=update.message.id, user_id=update.message.from_user.id, msg_text=text)
 
 # TODO: 错误处理
 
@@ -434,8 +433,10 @@ async def del_cache(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 def clear():  # ???
     storage.clear_temp()
 
+async def summarize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await ai.summarize_recent_chat_messages(update)
 
-start_handler = CommandHandler("start", start)
+start_handler = CommandHandler("start", start, block=False)
 clear_handler = CommandHandler("clear", clear)
 favs_handler = CommandHandler(["favs", "fav"], arc_favs, block=False)
 user_handler = CommandHandler(["user", "twitter"], arc_user, block=False)
@@ -443,25 +444,28 @@ mentions_handler = CommandHandler(
     ["mentions", "mention", "men"], arc_mentions, block=False
 )
 list_handler = CommandHandler(["list", "li"], arc_list, block=False)
-timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline, block=False)
+timeline_handler = CommandHandler(["tl", "timeline"], arc_timeline, block=True)
 # command: Union[str, List[str], Tuple[str, ...]]
 search_handler = CommandHandler("search", search_tweets)
 duty_handler = CommandHandler(["duty", "dm", "dutymachine"], dutymachine)
 userduty_handler = CommandHandler("userduty", userduty)
 followings_handler = CommandHandler("followings", followings)
-ping_handler = CommandHandler("ping", ping)
+ping_handler = CommandHandler("ping", ping, block=False)
 textile_handler = CommandHandler("textile", textile_graph)
 file_handler = MessageHandler(
-    filters.Document.IMAGE & filters.ChatType.PRIVATE, file_keeper
+    filters.Document.IMAGE & filters.ChatType.PRIVATE, file_keeper, block=False
 )
 voice_handler = MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, voice_listener)
 photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
 bbdown_handler = CommandHandler(["bb", "bili", "b"], bbdown)
 # video_handler = CommandHandler(["vid", "video"], download_video, # filters=(~ filters.Update.EDITED_MESSAGE),)
-clear_handler = CommandHandler("clear", del_cache)
+clear_handler = CommandHandler(['clear', 'klar'], del_cache)
 ai_handler = CommandHandler(
     ["wen", "man", "ask", "ai", "net", "netzh"], ai.ask_ai, block=False
 )
+sage_handler = CommandHandler(['poe', 'sage', 'cl', 'claude', 'gpt'], poeai.ask_poe, block=True)
+criticize_handler = CommandHandler(['criticize', 'cr', 'ruiping', 'rp'], poeai.criticize, block=True)
+summarize_handler = CommandHandler("sum", summarize, ~filters.ChatType.PRIVATE, block=True)
 message_handler = MessageHandler(
     (filters.TEXT | filters.CAPTION | filters.FORWARDED) & (~filters.COMMAND), plain_msg
 )
@@ -488,6 +492,9 @@ handlers = [
     # video_handler,
     clear_handler,
     ai_handler,
+    summarize_handler,
+    sage_handler,
+    criticize_handler,
 ]
 
 for handler in handlers:
