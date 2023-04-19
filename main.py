@@ -358,8 +358,10 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     with bbd.BBDownloader(text) as res:
         match res:
             case Ok(f):
+                path = f["path"]
+                resolutions = f["resolutions"]
                 await update.message.reply_video(
-                    f, caption=f"Downloaded {f.name.replace(bbd.tok, ' | ')}."
+                    path, caption=f"Downloaded {path.name.replace(bbd.tok, ' | ')}.", width=resolutions["width"], height=resolutions["height"]
                 )
             case Err(e):
                 print(f"[bold red]ERROR Downloading video, error {e}...[/bold red]")
