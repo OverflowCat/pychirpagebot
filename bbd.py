@@ -51,11 +51,24 @@ class BBDownloader:
         )
         if res.returncode != 0:
             return Err(res.returncode)
+
         files = [f for f in Path(self.temp_dir).iterdir() if f.is_file()]
         if not (files and files[0].suffix == ".mp4"):
             return Err(files)
         self.fname = files[0]
-        return Ok(self.fname)
+
+        resolution_cmd = f"""{" ".join(["ffprobe", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "default=nw=1:nk=1", escape(self.fname)])}"""
+        print("[cyan]" + resolution_cmd + "[/cyan]")
+        resolution_res = run(
+            resolution_cmd,
+            capture_output=True,
+            shell=True,
+        )
+        if resolution_res.returncode != 0:
+            return Err(resolution_res.returncode)
+
+        resolutions = resolution_res.stdout.decode().split("\n")
+        return Ok({ "path": self.fname, "resolutions": { "width": resolutions[0], "height": resolutions[1] } })
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if self.temp_dir and self.temp_dir.is_dir():
