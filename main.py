@@ -21,9 +21,11 @@ import duty
 import os
 import sys
 import re
+
 args = sys.argv[1:]  # 从第二个参数开始获取所有命令行参数
 bot_id = args[0]
 from dotenv import load_dotenv
+
 load_dotenv()  # graph.py requires env
 from ffm import is_ffmpeg_installed
 import storage
@@ -36,6 +38,7 @@ import bbd
 import ai
 import poeai
 from messages import msg_manager
+
 logger = logging.getLogger(__name__)
 
 logger.info("Starting up...")
@@ -70,7 +73,7 @@ def parse_int_or_str(s: str) -> int | str:
         return s
 
 
-ADMIN_ID = os.environ["CHIRPAGE_BOT_ADMIN_ID"]
+ADMIN_ID = int(os.environ["CHIRPAGE_BOT_ADMIN_ID"])
 
 myfllwings = []
 
@@ -397,7 +400,9 @@ This process will be finished in several minutes, for we have supported archivin
         log(graf, user, "user", text + ":timeline")
         text = "Got user from link: " + user + "\n" + graf["url"]
         await sent_msg.edit_text(
-            text=text if update.effective_chat.type == "PRIVATE" else sent_msg.text + "\n" + text,
+            text=text
+            if update.effective_chat.type == "PRIVATE"
+            else sent_msg.text + "\n" + text,
             parse_mode=ParseMode.HTML,
         )
         print(graf)
@@ -416,7 +421,13 @@ This process will be finished in several minutes, for we have supported archivin
             parse_mode=ParseMode.MARKDOWN)
         """
     elif update.effective_chat.type != "PRIVATE":
-        msg_manager.add_message(group_id=update.effective_chat.id, msg_id=update.message.id, user_id=update.message.from_user.id, msg_text=text)
+        msg_manager.add_message(
+            group_id=update.effective_chat.id,
+            msg_id=update.message.id,
+            user_id=update.message.from_user.id,
+            msg_text=text,
+        )
+
 
 # TODO: 错误处理
 
@@ -433,8 +444,10 @@ async def del_cache(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 def clear():  # ???
     storage.clear_temp()
 
+
 async def summarize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await ai.summarize_recent_chat_messages(update)
+
 
 start_handler = CommandHandler("start", start, block=False)
 clear_handler = CommandHandler("clear", clear)
@@ -459,13 +472,22 @@ voice_handler = MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, voice_l
 photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
 bbdown_handler = CommandHandler(["bb", "bili", "b"], bbdown)
 # video_handler = CommandHandler(["vid", "video"], download_video, # filters=(~ filters.Update.EDITED_MESSAGE),)
-clear_handler = CommandHandler(['clear', 'klar'], del_cache)
+clear_handler = CommandHandler(["clear", "klar"], del_cache)
 ai_handler = CommandHandler(
     ["wen", "man", "ask", "ai", "net", "netzh"], ai.ask_ai, block=False
 )
-sage_handler = CommandHandler(['poe', 'sage', 'cl', 'claude', 'gpt'], poeai.ask_poe, block=True)
-criticize_handler = CommandHandler(['criticize', 'cr', 'ruiping', 'rp'], poeai.criticize, block=True)
-summarize_handler = CommandHandler("sum", summarize, ~filters.ChatType.PRIVATE, block=True)
+sage_handler = CommandHandler(
+    ["poe", "sage", "cl", "claude", "gpt"],
+    poeai.ask_poe,
+    filters.User(ADMIN_ID) | ~filters.ChatType.PRIVATE,
+    block=True,
+)
+criticize_handler = CommandHandler(
+    ["criticize", "cr", "ruiping", "rp"], poeai.criticize, block=True
+)
+summarize_handler = CommandHandler(
+    "sum", summarize, ~filters.ChatType.PRIVATE, block=True
+)
 message_handler = MessageHandler(
     (filters.TEXT | filters.CAPTION | filters.FORWARDED) & (~filters.COMMAND), plain_msg
 )
