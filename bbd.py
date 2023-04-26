@@ -1,8 +1,8 @@
-from subprocess import run
+from subprocess import run, CalledProcessError
 import time
 from pathlib import Path
 from shutil import rmtree
-from result import Ok, Err, Result
+from result import Ok, Err
 from rich import print
 
 tok = "𖩏"
@@ -44,11 +44,15 @@ class BBDownloader:
         self.temp_dir.mkdir(parents=True, exist_ok=True)
         cmd = f"""{" ".join(["BBDown", self.video, "--encoding-priority", "hevc", "--work-dir", escape(self.temp_dir), "--file-pattern", escape(file_pattern)])}"""
         print("[cyan]" + cmd + "[/cyan]")
-        res = run(
-            cmd,
-            capture_output=True,
-            shell=True,
-        )
+        try:
+            res = run(
+                cmd,
+                capture_output=True,
+                shell=True,
+            )
+        except CalledProcessError as e:
+            print("Command failed with exit code", e.returncode)
+            return Err(e.returncode)
         if res.returncode != 0:
             return Err(res.returncode)
 
@@ -59,16 +63,24 @@ class BBDownloader:
 
         resolution_cmd = f"""{" ".join(["ffprobe", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "default=nw=1:nk=1", escape(self.fname)])}"""
         print("[cyan]" + resolution_cmd + "[/cyan]")
-        resolution_res = run(
-            resolution_cmd,
-            capture_output=True,
-            shell=True,
-        )
+        try:
+            resolution_res = run(
+                resolution_cmd,
+                capture_output=True,
+                shell=True,
+            )
+        except CalledProcessError as e:
+            return Err(e.returncode)
         if resolution_res.returncode != 0:
             return Err(resolution_res.returncode)
 
         resolutions = resolution_res.stdout.decode().split("\n")
-        return Ok({ "path": self.fname, "resolutions": { "width": resolutions[0], "height": resolutions[1] } })
+        return Ok(
+            {
+                "path": self.fname,
+                "resolutions": {"width": resolutions[0], "height": resolutions[1]},
+            }
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if self.temp_dir and self.temp_dir.is_dir():
