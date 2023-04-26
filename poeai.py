@@ -95,16 +95,15 @@ async def criticize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                         )
                         splitting_word = word
                         break
-            if splitting_word is None:
-                continue
-            text = chunk["text"].split(splitting_word)[-1] + " ▎"
-            if msg.text == text:
-                continue
-            await msg.edit_text(text)
+            else:
+                text = chunk["text"].split(splitting_word)[-1] + " ▎"
+                if msg.text != text:
+                    await msg.edit_text(text)
     print("last chunk:", last_chunk)
     if last_chunk:
         text = last_chunk["text"].split(splitting_word)[-1]
-        await msg.edit_text(text)
+        if msg.text != text:
+            await msg.edit_text(text)
     client.send_chat_break("chinchilla")
     if update.message.from_user.id != ADMIN_ID and update.effective_chat.id != ADMIN_ID:
         await update.message.forward(ADMIN_ID)
