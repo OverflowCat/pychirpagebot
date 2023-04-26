@@ -90,10 +90,36 @@ logging.basicConfig(
 
 
 async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        """Please send me the link of any tweet directly, or using the /user command plus the Twitter user's screen name (like `/user elonmusk`) to me then I will fetch the account's latest tweets and archive them as a Telegraph.
-		You can also forward voice messages to me to get the file sizes of them.
-		Duty Machine service is temporarily down due to GitHub's term of service."""
+    await update.message.reply_html(
+        """你好，我是 pychirpagebot，支持以下多种指令：
+
+<code>/start，/help</code> - 显示本帮助消息
+<code>/ping</code> - 测试机器人是否宕机
+<code>/textile</code> - 将 Textile 标记文本转换成富文本的 Telegram 消息
+<code>语音消息</code> - 获取其文件大小
+/clear, /klar - 清除缓存
+<b>- Twitter</b>
+发送推文链接 - 抓取推文和媒体，以及该用户最近的 60 条推文
+<code>/favs + 用户名</code> - 抓取 Twitter 用户最近的 60 条点赞
+<code>/user + 用户名</code> - 抓取 Twitter 用户最近的 60 条推文
+<code>/list + 列表编号</code> - 抓取 Twitter 主题列表
+<code>/mentions</code> - 获取提及列表
+/tl - 获取时间线
+<b>- AI</b>
+<code>/ai</code>, <code>/wen</code>, <code>/man</code>, <code>/ask</code> - 通过 OpenAI API 向 GPT 3.5 提问
+<code>/net</code> - 联网搜索并通过 GPT 3.5 用英文解释
+<code>/netzh</code> - 联网搜索并通过 GPT 3.5 用中文解释
+<code>/poe</code>, <code>/gpt</code> - 通过 Poe 向 GPT 3.5 提问
+<code>/sage</code> - 通过 Poe 向 Sage 提问，Sage 的回答更简明
+<code>/claude</code>, <code>/cl</code> - 通过 Poe 向 Anthropic 的 Claude Instant 提问
+<code>/ruiping</code>, <code>/rp</code> - 用中文锐评
+<code>/criticize</code>, <code>/cr</code> - 用英文锐评
+<code>/sum</code> - 生成聊天记录摘要
+<b>- 哔哩哔哩</b>
+<code>/bb</code> 或直接发送含有 <code>b23.*</code>，<code>bilibili.com</code> 链接的消息 - 下载哔哩哔哩视频（最高画质）
+
+请注意，某些指令需要特定的权限和条件才能使用，例如管理员权限和私人聊天。
+"""
     )
 
 
@@ -450,8 +476,7 @@ def clear():  # ???
 async def summarize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     await ai.summarize_recent_chat_messages(update)
 
-
-start_handler = CommandHandler("start", start, block=False)
+start_handler = CommandHandler(["start", 'help'], start, block=False)
 clear_handler = CommandHandler("clear", clear)
 favs_handler = CommandHandler(["favs", "fav"], arc_favs, block=False)
 user_handler = CommandHandler(["user", "twitter"], arc_user, block=False)
