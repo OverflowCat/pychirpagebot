@@ -1,66 +1,75 @@
-from peewee import *
-from rich import print
-from random import random
+import sqlite3
 import json
+from random import random
+from rich import print
 
-db = SqliteDatabase("messages.db")
-
-
-class GroupMessageTable(Model):
-    group_id = IntegerField()
-    msg_id = IntegerField()
-    user_id = IntegerField()
-    msg_text = TextField()
-    extra = TextField(null=True)
-
-    class Meta:
-        database = db
+db_path = "messages.db"
+db_conn = sqlite3.connect(db_path)
+cursor = db_conn.cursor()
 
 
 class GroupMessageManager:
     def __init__(self):
-        self.table = GroupMessageTable()
         self.create_table()
 
     def create_table(self):
-        with db:
-            self.table.create_table()
+        cursor.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS groupmsg(
+                id INTEGER PRIMARY KEY,
+                group_id INTEGER,
+                msg_id INTEGER,
+                user_id INTEGER,
+                msg_text TEXT,
+                extra TEXT
+            );
+            '''
+        )
+        db_conn.commit()
 
     def add_message(
         self, group_id: int, msg_id: int, user_id: int, msg_text: str, extra=None
     ):
         if extra:
             extra = json.dumps(extra)
-        message = self.table.create(
-            group_id=group_id,
-            msg_id=msg_id,
-            user_id=user_id,
-            msg_text=msg_text,
-            extra=extra,
+        cursor.execute(
+            '''
+            INSERT INTO groupmsg(group_id, msg_id, user_id, msg_text, extra)
+            VALUES(?, ?, ?, ?, ?);
+            ''',
+            (group_id, msg_id, user_id, msg_text, extra),
         )
-        print("[green]Inserted row:[/green]", message)
-        if random() < 0.25:
-            self.delete_cache(group_id)
-        return message
+        db_conn.commit()
+        print("[green]Inserted row:[/green]", {
+            "group_id": group_id,
+            "msg_id": msg_id,
+            "user_id": user_id,
+            "msg_text": msg_text,
+            "extra": extra
+        })
+        # if random() < 0.25:
+        #     self.delete_cache(group_id)
 
-    def get_latest_messages_by_group_id(self, group_id: int, limit=100):
-        # write a method that fetches 100 latest messages in table by group_id. in a group, the lager msg_id is, the newer the message is.
-        messages = (
-            self.table.select()
-            .where(self.table.group_id == group_id)
-            .order_by(self.table.msg_id)
-            .limit(limit)
+    def get_latest_messages_by_group_id(self, group_id: int, limit=100) -> list:
+        cursor.execute(
+            '''
+            SELECT user_id, msg_text FROM groupmsg
+            WHERE group_id = ?
+            ORDER BY msg_id DESC
+            LIMIT ?;
+            ''',
+            (group_id, limit),
         )
-        return messages
-
+        rows = cursor.fetchall()
+        return [{"user_id": row[0], "msg_text": row[1]} for row in rows]
+    
     def delete_cache(self, group_id: int):
         pass
 
     def test_get_latest_messages_by_group_id(self, group_id: int):
-        # write a method that returns a list of the first 10 latest messages and the last 10 of the result of the 300 latest messages.
-        latest_300_messages = self.get_latest_messages_by_group_id(group_id)
+        latest_300_messages = self.get_latest_messages_by_group_id(group_id, 300)
         first_10_latest_messages = latest_300_messages[:10]
         last_10_messages = latest_300_messages[-10:]
-        return list(first_10_latest_messages) + list(last_10_messages)
+        return first_10_latest_messages + last_10_messages
 
 msg_manager = GroupMessageManager()

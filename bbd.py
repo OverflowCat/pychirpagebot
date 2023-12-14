@@ -42,8 +42,8 @@ class BBDownloader:
         self.timestamp = str(time.time_ns())
         self.temp_dir = Path("temp/bb" + self.timestamp)
         self.temp_dir.mkdir(parents=True, exist_ok=True)
-        cmd = f"""{" ".join(["BBDown", self.video, "--encoding-priority", "hevc", "--work-dir", escape(self.temp_dir), "--file-pattern", escape(file_pattern)])}"""
-        print("[cyan]" + cmd + "[/cyan]")
+        cmd = f"""{" ".join(["BBDown", self.video, "--encoding-priority", "hevc", "--dfn-priority", "720P", "--work-dir", escape(self.temp_dir), "--file-pattern", escape(file_pattern)])}"""
+        print("bbdown cmd: [cyan]" + cmd + "[/cyan]")
         try:
             res = run(
                 cmd,
@@ -60,9 +60,8 @@ class BBDownloader:
         if not (files and files[0].suffix == ".mp4"):
             return Err(files)
         self.fname = files[0]
-
         resolution_cmd = f"""{" ".join(["ffprobe", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "default=nw=1:nk=1", escape(self.fname)])}"""
-        print("[cyan]" + resolution_cmd + "[/cyan]")
+        print("resolution_cmd:", "[cyan]" + resolution_cmd + "[/cyan]")
         try:
             resolution_res = run(
                 resolution_cmd,
@@ -70,11 +69,14 @@ class BBDownloader:
                 shell=True,
             )
         except CalledProcessError as e:
+            print("Probe CalledProcessError", e)
             return Err(e.returncode)
         if resolution_res.returncode != 0:
+            print("Probe Bad Return Code")
             return Err(resolution_res.returncode)
 
         resolutions = resolution_res.stdout.decode().split("\n")
+        print("Probe Okay,", resolutions)
         return Ok(
             {
                 "path": self.fname,

@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, File
 from telegram.ext import (
     MessageHandler,
     CommandHandler,
@@ -20,7 +20,9 @@ from context import ProgressContext, FakeProgressContext
 import duty
 import os
 import sys
+from pathlib import Path
 import re
+from ocr import ocr
 
 args = sys.argv[1:]  # 从第二个参数开始获取所有命令行参数
 bot_id = args[0]
@@ -36,7 +38,7 @@ from rich import print
 from result import Ok, Err
 import bbd
 import ai
-import poeai
+# import poeai
 from messages import msg_manager
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,8 @@ myfllwings = []
 
 application = (
     ApplicationBuilder()
+    # .base_url("http://localhost:8081/bot")
+    # .base_file_url("http://localhost:8081/file/bot")
     .token(os.environ["CHIRPAGE" + bot_id])
     .concurrent_updates(4)
     .build()
@@ -112,6 +116,7 @@ async def start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 <code>/poe</code>, <code>/gpt</code> - 通过 Poe 向 GPT 3.5 提问
 <code>/sage</code> - 通过 Poe 向 Sage 提问，Sage 的回答更简明
 <code>/claude</code>, <code>/cl</code> - 通过 Poe 向 Anthropic 的 Claude Instant 提问
+<code>/word</code> - AI 查词典
 <code>/ruiping</code>, <code>/rp</code> - 用中文锐评
 <code>/criticize</code>, <code>/cr</code> - 用英文锐评
 <code>/sum</code> - 生成聊天记录摘要
@@ -347,12 +352,12 @@ async def voice_listener(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     )
 
 
-async def photo_uploader(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    bot = ctx.bot
-    file = bot.getFile(update.message.photo[-1].file_id)
-    graph_file = graph.save_img(file.file_path)
+# async def photo_uploader(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+#     bot = ctx.bot
+#     file = bot.getFile(update.message.photo[-1].file_id)
+#     graph_file = graph.save_img(file.)
 
-    await bot.send_message(chat_id=update.effective_chat.id, text=graph_file)
+#     await bot.send_message(chat_id=update.effective_chat.id, text=graph_file)
 
 
 # DO NOT POST file.file_path TO OTHERS AS IT CONTAINS BOT_TOKEN!
@@ -402,13 +407,16 @@ async def plain_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     if not update.message or not (update.message.text or update.message.caption):
         print(update)
         return
+    if update.message.caption and update.message.caption.lower().startswith('/ocr'):
+        return await ocr_image(update, ctx)
     if update.message.text:
-        if reg.get_bili(update.message.text):
-            return await bbdown(update, ctx)
+        # if reg.get_bili(update.message.text):
+        #    return await bbdown(update, ctx)
         if await ai.respond_to_ai(update, ctx):
             return
     text = update.message.text or update.message.caption
     if reg.is_status(text):
+        return
         regf = re.findall(r"com\/@?[a-zA-Z0-9_]+\/status", text)[0]
         spl = regf.split(r"/")
         user = spl[1]
@@ -435,10 +443,13 @@ This process will be finished in several minutes, for we have supported archivin
         )
         print(graf)
     elif reg.is_list(text):
+        return
         await arc_list(update, ctx)
     elif reg.is_user_profile_page(text):
+        return
         await arc_user(update, ctx, cmd=False)
     elif reg.is_duty(text):
+        return
         dutymachine(update, ctx)
         """
         resp = duty.dm(text)
@@ -474,7 +485,24 @@ def clear():  # ???
 
 
 async def summarize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await ai.summarize_recent_chat_messages(update)
+    pass#await poeai.summarize_recent_chat_messages(update, ctx)
+
+async def ocr_image(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(f'Recognizing…')
+    if update.message and update.message.photo:
+        photo = update.message.photo[-1]
+        photo_file = await ctx.bot.get_file(photo.file_id)
+        # Save the photo to a file
+        file_path = Path("temp/ocr_photo_temp.jpg")
+        await File.download_to_drive(photo_file, file_path)
+        text = ocr(file_path)
+        if text:
+            await update.message.reply_text(f'Text recognized:\n\n{text}')
+        else:
+            await update.message.reply_text('No text was recognized in the image.')
+        os.remove(file_path)
+    else:
+        await update.message.reply_text('Please send a photo to perform OCR.')
 
 start_handler = CommandHandler(["start", 'help'], start, block=False)
 clear_handler = CommandHandler("clear", clear)
@@ -496,28 +524,34 @@ file_handler = MessageHandler(
     filters.Document.IMAGE & filters.ChatType.PRIVATE, file_keeper, block=False
 )
 voice_handler = MessageHandler(filters.VOICE & filters.ChatType.PRIVATE, voice_listener)
-photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
-bbdown_handler = CommandHandler(["bb", "bili", "b"], bbdown)
+# photo_handler = MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, photo_uploader)
+# bbdown_handler = CommandHandler(["bb", "bili", "b"], bbdown)
 # video_handler = CommandHandler(["vid", "video"], download_video, # filters=(~ filters.Update.EDITED_MESSAGE),)
 clear_handler = CommandHandler(["clear", "klar"], del_cache)
 ai_handler = CommandHandler(
-    ["wen", "man", "ask", "ai", "net", "netzh"], ai.ask_ai, block=False
+    ["wen", "man", "ask", "gpt", "gpt4", "g4t", "c2", "net", "netzh", "jp", "rp"], ai.ask_ai, block=False
 )
-sage_handler = CommandHandler(
-    ["poe", "sage", "cl", "claude", "gpt"],
-    poeai.ask_poe,
-    filters.User(ADMIN_ID) | ~filters.ChatType.PRIVATE,
-    block=True,
-)
-criticize_handler = CommandHandler(
-    ["criticize", "cr", "ruiping", "rp"], poeai.criticize, block=True
-)
+# sage_handler = CommandHandler(
+#    ["poe", "sage", "cl", "claude", "gpt", "word", "w"],
+#    poeai.ask_poe,
+#    filters.User(ADMIN_ID) | ~filters.ChatType.PRIVATE,
+#    block=True,
+#)
+#askany_handler = CommandHandler(
+#    poeai.COMMANDS,
+#    poeai.ask_any,
+#    block=True,
+#)
+#criticize_handler = CommandHandler(
+#    ["criticize", "cr", "ruiping", "rp"], poeai.criticize, block=True
+#)
 summarize_handler = CommandHandler(
     "sum", summarize, ~filters.ChatType.PRIVATE, block=True
 )
 message_handler = MessageHandler(
     (filters.TEXT | filters.CAPTION | filters.FORWARDED) & (~filters.COMMAND), plain_msg
 )
+ocr_handler = CommandHandler(["ocr"], ocr_image, ~filters.UpdateType.EDITED_MESSAGE)
 
 handlers = [
     start_handler,
@@ -536,14 +570,16 @@ handlers = [
     message_handler,
     file_handler,
     voice_handler,
-    photo_handler,
-    bbdown_handler,
+    ocr_handler,
+    # photo_handler,
+  #  bbdown_handler,
     # video_handler,
     clear_handler,
     ai_handler,
-    summarize_handler,
-    sage_handler,
-    criticize_handler,
+    #summarize_handler,
+    #sage_handler,
+    #askany_handler,
+    #criticize_handler,
 ]
 
 for handler in handlers:

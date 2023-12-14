@@ -109,21 +109,27 @@ def is_list(url):
 twitter_username_re = re.compile(r"^[a-zA-Z0-9_]{1,15}$")
 
 
-def is_valid_twitter_username(s: str):
+def is_valid_twitter_username(s: str) -> bool:
     """Your username cannot be longer than 15 characters. Your name can be longer (50 characters) or shorter than 4
     characters, but usernames are kept shorter for the sake of ease. A username can only contain alphanumeric
     characters (letters A-Z, numbers 0-9) with the exception of underscores, as noted above."""
-    return twitter_username_re.match(s)
+    return bool(twitter_username_re.match(s))
 
 
-def is_valid_as_twitter_username(s: str):
+def is_valid_as_twitter_username(s: str) -> bool:
     if " as " in s:
         username = s.split(" as ")[0]
         return is_valid_twitter_username(username)
     return False
 
 
-def cutcmd(msg_txt):  # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
-    seps = msg_txt.split(" ")
-    seps.pop(0)
-    return " ".join(seps).strip()
+def cutcmd(text: str) -> str:  # cmdre = re.compile(r'^\/[a-z]+(@[a-zA-Z0-9_]+bot)? ?')
+    seps = splitcmd(text)
+    if len(seps) > 1:
+        return seps[1]
+    return ""
+
+def splitcmd(text) -> tuple[str, str]:
+    seps = text.split(" ", 1)
+    seps[0] = seps[0].split('@', 1)[0]
+    return seps
