@@ -15,7 +15,6 @@ DEV_MODE_WORD_LIST = [
 from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import ContextTypes
-from telegram.helpers import escape_markdown
 from telegram.constants import ParseMode
 
 import os
@@ -132,7 +131,7 @@ async def ask_any(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
         # try markdown first
         try:
             await msg.edit_text(last_chunk["text"], parse_mode=ParseMode.MARKDOWN_V2)
-        except Exception as e:
+        except Exception:
             await msg.edit_text(last_chunk["text"])
 
 async def criticize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):

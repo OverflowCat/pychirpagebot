@@ -1,6 +1,5 @@
 import os
 import re
-import json
 import pymysql.cursors
 
 def exe(operation):

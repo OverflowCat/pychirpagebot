@@ -20,7 +20,6 @@ use_png = False
 # ltw: last fetched tweets
 
 from reg import id_generator
-from datetime import datetime
 from html_telegraph_poster import TelegraphPoster
 from html_telegraph_poster.upload_images import upload_image
 

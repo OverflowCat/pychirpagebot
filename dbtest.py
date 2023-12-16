@@ -1,8 +1,6 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-import re
-import json
 import pymysql.cursors
 def exe(operation):
 # Connect to the database

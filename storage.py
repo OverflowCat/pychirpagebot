@@ -1,6 +1,5 @@
 import os
 import shutil
-import threading
 from typing import Optional
 
 _debug = True

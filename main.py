@@ -400,7 +400,7 @@ async def bbdown(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_html(
                     f"<b>Error</b>: Process ended with return code {e}. Maybe the link is a live steam."
                     if isinstance(e, int)
-                    else f"<b>Error</b>: Video file expected to be found but failed. Please check logs."
+                    else "<b>Error</b>: Video file expected to be found but failed. Please check logs."
                 )
 
 
@@ -489,7 +489,7 @@ async def summarize(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
     pass#await poeai.summarize_recent_chat_messages(update, ctx)
 
 async def ocr_image(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(f'Recognizing…')
+    await update.message.reply_text('Recognizing…')
     if update.message and update.message.photo:
         photo = update.message.photo[-1]
         photo_file = await ctx.bot.get_file(photo.file_id)
@@ -535,6 +535,10 @@ ai_handler = CommandHandler(
 gemini_handler = CommandHandler(
     ["gemini", "g"], gemini_chat, block=False
 )
+gemini_image_handler = MessageHandler(
+    filters.PHOTO, gemini_chat, block=False
+)
+
 # sage_handler = CommandHandler(
 #    ["poe", "sage", "cl", "claude", "gpt", "word", "w"],
 #    poeai.ask_poe,
@@ -546,9 +550,6 @@ gemini_handler = CommandHandler(
 #    poeai.ask_any,
 #    block=True,
 #)
-#criticize_handler = CommandHandler(
-#    ["criticize", "cr", "ruiping", "rp"], poeai.criticize, block=True
-#)
 summarize_handler = CommandHandler(
     "sum", summarize, ~filters.ChatType.PRIVATE, block=True
 )
@@ -558,13 +559,15 @@ message_handler = MessageHandler(
 ocr_handler = CommandHandler(["ocr"], ocr_image, ~filters.UpdateType.EDITED_MESSAGE)
 
 handlers = [
+    gemini_image_handler,
+    gemini_handler,
     start_handler,
     clear_handler,
-    favs_handler,
-    user_handler,
-    mentions_handler,
-    list_handler,
-    timeline_handler,
+    # favs_handler,
+    # user_handler,
+    # mentions_handler,
+    # list_handler,
+    # timeline_handler,
     # search_handler,
     duty_handler,
     userduty_handler,
@@ -580,7 +583,6 @@ handlers = [
     # video_handler,
     clear_handler,
     ai_handler,
-    gemini_handler,
     #summarize_handler,
     #sage_handler,
     #askany_handler,

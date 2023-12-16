@@ -1,6 +1,5 @@
 import sqlite3
 import json
-from random import random
 from rich import print
 
 db_path = "messages.db"
