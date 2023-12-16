@@ -1,5 +1,5 @@
 import re
-
+from telegram import Update
 import string
 import random
 
@@ -133,3 +133,22 @@ def splitcmd(text) -> tuple[str, str]:
     seps = text.split(" ", 1)
     seps[0] = seps[0].split('@', 1)[0]
     return seps
+
+def get_text(message: Update.message):
+    result = ""
+    if message.text:
+        result = message.text
+    elif message.caption:
+        result = message.caption
+    if result.startswith("/"):
+        result = cutcmd(result)
+    return result
+
+def get_context_text(message: Update.message):
+    result = ""
+    if message.reply_to_message:
+        quote = get_text(message.reply_to_message)
+        if len(quote) > 0:
+            result = "> " + quote + "\n"
+    result += get_text(message)
+    return result

@@ -40,6 +40,7 @@ import bbd
 import ai
 # import poeai
 from messages import msg_manager
+from gemini import gemini_chat
 
 logger = logging.getLogger(__name__)
 
@@ -531,6 +532,9 @@ clear_handler = CommandHandler(["clear", "klar"], del_cache)
 ai_handler = CommandHandler(
     ["wen", "man", "ask", "gpt", "gpt4", "g4t", "c2", "net", "netzh", "jp", "rp"], ai.ask_ai, block=False
 )
+gemini_handler = CommandHandler(
+    ["gemini", "g"], gemini_chat, block=False
+)
 # sage_handler = CommandHandler(
 #    ["poe", "sage", "cl", "claude", "gpt", "word", "w"],
 #    poeai.ask_poe,
@@ -572,10 +576,11 @@ handlers = [
     voice_handler,
     ocr_handler,
     # photo_handler,
-  #  bbdown_handler,
+    # bbdown_handler,
     # video_handler,
     clear_handler,
     ai_handler,
+    gemini_handler,
     #summarize_handler,
     #sage_handler,
     #askany_handler,
